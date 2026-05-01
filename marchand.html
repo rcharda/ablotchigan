@@ -461,7 +461,10 @@ select.f-input{cursor:pointer;}
         <div class="section-card">
           <div class="section-card-header">
             <span class="section-card-title">🛵 Gestion des livreurs</span>
-            <button class="btn btn-ghost btn-sm" onclick="renderLivreursPanel()">🔄 Actualiser</button>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-ghost btn-sm" onclick="renderLivreursPanel()">🔄 Actualiser</button>
+              <button class="btn btn-gold btn-sm" onclick="openNewLivreurModal()">＋ Créer un livreur</button>
+            </div>
           </div>
           <div class="section-card-body" id="livreursPanel">Chargement…</div>
         </div>
@@ -492,6 +495,44 @@ select.f-input{cursor:pointer;}
   </div>
   <div class="notif-list" id="notifList">
     <div class="empty" style="padding:30px;"><div class="empty-icon">🔔</div>Aucune notification</div>
+  </div>
+</div>
+
+<!-- MODAL: CRÉER UN LIVREUR -->
+<div id="newLivreurModal" class="modal-bg">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-hd">
+      <span class="modal-title">🛵 Créer un compte livreur</span>
+      <button class="modal-close" onclick="closeModal('newLivreurModal')">✕</button>
+    </div>
+    <div class="modal-bd">
+      <p style="font-size:.83rem;color:var(--text-muted);margin-bottom:18px;line-height:1.5;">
+        Remplissez les informations ci-dessous. Le livreur pourra ensuite se connecter à l'app livreur avec son email et mot de passe.
+      </p>
+      <div class="form-grid">
+        <div class="f-group span-2">
+          <label class="f-label">Nom complet</label>
+          <input id="nlName" class="f-input" placeholder="Ex : Jean Kokou" autocomplete="off">
+        </div>
+        <div class="f-group span-2">
+          <label class="f-label">Téléphone</label>
+          <input id="nlPhone" class="f-input" type="tel" placeholder="Ex : +229 97 00 00 00">
+        </div>
+        <div class="f-group span-2">
+          <label class="f-label">Adresse email</label>
+          <input id="nlEmail" class="f-input" type="email" placeholder="livreur@ablotchigan.bj" autocomplete="off">
+        </div>
+        <div class="f-group span-2">
+          <label class="f-label">Mot de passe</label>
+          <input id="nlPass" class="f-input" type="password" placeholder="Minimum 6 caractères" autocomplete="new-password">
+        </div>
+      </div>
+      <div id="nlError" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:var(--r-sm);padding:10px 14px;font-size:.84rem;color:var(--red);margin-top:4px;"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" onclick="closeModal('newLivreurModal')">Annuler</button>
+      <button class="btn btn-gold" id="btnCreateLivreur" onclick="createLivreur()">✅ Créer le compte</button>
+    </div>
   </div>
 </div>
 
@@ -851,14 +892,16 @@ async function loadCategories() {
 }
 
 async function loadLivreurs() {
-  // Charge les profils livreurs + leur config + leur statut temps réel
-  const { data } = await sb.from('profiles')
-    .select('*, livreur_config(price_per_km, is_available)')
-    .eq('role', 'livreur');
+  // FIX: livreur_config n'existe pas dans le schéma — on utilise livreur_status uniquement
+  const { data, error } = await sb.from('profiles')
+    .select('*')
+    .eq('role', 'livreur')
+    .order('created_at', { ascending: false });
+  if (error) console.error('loadLivreurs error:', error);
   allLivreurs = data || [];
-  // Charge aussi livreur_status pour online status
+  // Charge livreur_status pour online status, disponibilité et prix
   const { data: statusData } = await sb.from('livreur_status')
-    .select('livreur_id, is_available, updated_at, latitude, longitude')
+    .select('livreur_id, is_available, updated_at, latitude, longitude, price_per_km, vehicle_type')
     .order('updated_at', { ascending: false });
   allLivreurStatus = statusData || [];
 }
@@ -1056,10 +1099,9 @@ async function autoAssignLivreur(orderId) {
   let livreurId = statusData?.[0]?.livreur_id;
 
   if (!livreurId) {
-    // Fallback: chercher dans livreur_config
+    // Fallback: premier livreur dans la liste
     await loadLivreurs();
-    const dispo = allLivreurs.find(l => l.livreur_config?.is_available === true);
-    livreurId = dispo?.id || allLivreurs[0]?.id;
+    livreurId = allLivreurs[0]?.id;
   }
 
   if (!livreurId) {
@@ -1143,10 +1185,10 @@ function openAssignModal(orderId) {
       <div class="livreur-avatar">${(l.full_name?.charAt(0) || 'L').toUpperCase()}</div>
       <div class="livreur-info" style="flex:1;">
         <div class="lname">${l.full_name || 'Livreur'}</div>
-        <div class="lphone">${l.phone || '—'} · ${l.livreur_config?.price_per_km || 1000} FCFA/km</div>
+        <div class="lphone">${l.phone || '—'} · ${lStatus?.price_per_km || 500} FCFA/km</div>
         ${lastSeen ? `<div style="font-size:.7rem;color:var(--text-dim);">${lastSeen}</div>` : ''}
       </div>
-      <span class="badge ${isOnline ? 'badge-online' : (l.livreur_config?.is_available !== false ? 'badge-ready' : 'badge-cancelled')}">${isOnline ? '🟢 En ligne' : (l.livreur_config?.is_available !== false ? '✅ Dispo' : '❌ Occupé')}</span>
+      <span class="badge ${isOnline ? 'badge-online' : (lStatus?.is_available !== false ? 'badge-ready' : 'badge-cancelled')}">${isOnline ? '🟢 En ligne' : (lStatus?.is_available !== false ? '✅ Dispo' : '❌ Occupé')}</span>
     </div>`;
   }).join('');
   openModal('assignModal');
@@ -1554,6 +1596,170 @@ async function renderClientsPanel() {
 }
 
 // ═══════════════════════════════════════════════
+// CRÉER UN COMPTE LIVREUR (depuis marchand)
+// ═══════════════════════════════════════════════
+function openNewLivreurModal() {
+  document.getElementById('nlName').value = '';
+  document.getElementById('nlPhone').value = '';
+  document.getElementById('nlEmail').value = '';
+  document.getElementById('nlPass').value = '';
+  document.getElementById('nlError').style.display = 'none';
+  document.getElementById('btnCreateLivreur').disabled = false;
+  document.getElementById('btnCreateLivreur').textContent = '✅ Créer le compte';
+  openModal('newLivreurModal');
+}
+
+async function createLivreur() {
+  const name  = document.getElementById('nlName').value.trim();
+  const phone = document.getElementById('nlPhone').value.trim();
+  const email = document.getElementById('nlEmail').value.trim();
+  const pass  = document.getElementById('nlPass').value;
+  const errEl = document.getElementById('nlError');
+
+  errEl.style.display = 'none';
+
+  if (!name)  return showLivreurError('Le nom est requis.');
+  if (!email) return showLivreurError('L\'email est requis.');
+  if (!pass || pass.length < 6) return showLivreurError('Le mot de passe doit faire au moins 6 caractères.');
+
+  const btn = document.getElementById('btnCreateLivreur');
+  btn.disabled = true;
+  btn.textContent = '⏳ Création en cours…';
+
+  try {
+    // ── Étape 1 : créer l'utilisateur via l'API REST Supabase
+    // On passe par fetch() directement pour NE PAS toucher à la session du marchand
+    // ── Étape 1 : créer l'utilisateur + injecter les métadonnées dans le signup
+    // Les métadonnées sont lues par le trigger handle_new_user() de Supabase
+    // pour créer automatiquement le profil avec le bon rôle
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`
+      },
+      body: JSON.stringify({
+        email,
+        password: pass,
+        data: {           // ← raw_user_meta_data → lu par handle_new_user()
+          full_name: name,
+          phone: phone || null,
+          role: 'livreur'
+        }
+      })
+    });
+
+    const authData = await res.json();
+
+    if (!res.ok) {
+      const msg = authData.msg || authData.error_description || authData.error || 'Erreur lors de la création du compte.';
+      return showLivreurError(msg);
+    }
+
+    const userId = authData.user?.id || authData.id;
+    if (!userId) return showLivreurError('Impossible de récupérer l\'ID du nouvel utilisateur.');
+
+    // ── Étape 2 : créer le profil en utilisant le TOKEN DU NOUVEAU COMPTE
+    // Ceci contourne la RLS (un utilisateur peut toujours écrire son propre profil)
+    // La session du marchand n'est PAS touchée car on n'utilise pas sb.auth
+    const newUserToken = authData.session?.access_token || authData.access_token;
+
+    const profilePayload = {
+      id: userId,
+      full_name: name,
+      phone: phone || null,
+      email: email,
+      role: 'livreur',
+      created_at: new Date().toISOString()
+    };
+
+    if (newUserToken) {
+      // Utiliser le token du livreur pour l'insertion — contourne la RLS
+      const profRes = await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${newUserToken}`,
+          'Prefer': 'resolution=merge-duplicates,return=minimal'
+        },
+        body: JSON.stringify(profilePayload)
+      });
+      if (!profRes.ok) {
+        const err = await profRes.text();
+        console.warn('Profile insert avec token livreur:', err);
+        // Fallback: essayer avec le token du marchand (si RLS le permet)
+        await sb.from('profiles').upsert(profilePayload, { onConflict: 'id' });
+      }
+    } else {
+      // Email confirmation activée → pas de token immédiat
+      // Le trigger handle_new_user() doit créer le profil via les metadata
+      // Ou essayer avec le token marchand
+      const { error: profErr } = await sb.from('profiles').upsert(profilePayload, { onConflict: 'id' });
+      if (profErr) console.warn('Upsert profil (token marchand):', profErr.message);
+    }
+
+    // ── Étape 3 : initialiser livreur_status si pas encore fait
+    if (newUserToken) {
+      await fetch(`${SUPABASE_URL}/rest/v1/livreur_status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${newUserToken}`,
+          'Prefer': 'resolution=merge-duplicates,return=minimal'
+        },
+        body: JSON.stringify({
+          livreur_id: userId,
+          is_online: false,
+          is_available: true,
+          price_per_km: 500,
+          vehicle_type: 'moto'
+        })
+      });
+    }
+
+    // ── Étape 4 : vérifier que le profil existe bien
+    const { data: checkProfile } = await sb.from('profiles')
+      .select('id, role')
+      .eq('id', userId)
+      .single();
+
+    if (!checkProfile) {
+      console.warn('Profil non trouvé. Vérifiez le trigger handle_new_user ou la RLS.');
+      // On prévient mais on ne bloque pas — l'email de confirmation peut être requis
+      toast(`⚠️ Compte créé mais profil en attente de confirmation email (userId: ${userId.slice(0,8)})`, 'info');
+      closeModal('newLivreurModal');
+      return;
+    }
+
+    console.log('Profil livreur créé:', checkProfile);
+
+    // ── Succès
+    toast(`✅ Compte livreur créé pour ${name} — il peut maintenant se connecter.`, 'success');
+    closeModal('newLivreurModal');
+    await renderLivreursPanel();
+
+  } catch (e) {
+    showLivreurError('Erreur inattendue : ' + e.message);
+    console.error(e);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✅ Créer le compte';
+  }
+}
+
+function showLivreurError(msg) {
+  const el = document.getElementById('nlError');
+  el.textContent = '❌ ' + msg;
+  el.style.display = 'block';
+  const btn = document.getElementById('btnCreateLivreur');
+  btn.disabled = false;
+  btn.textContent = '✅ Créer le compte';
+}
+
+// ═══════════════════════════════════════════════
 // LIVREURS PANEL — AVEC STATUT ONLINE
 // ═══════════════════════════════════════════════
 async function renderLivreursPanel() {
@@ -1568,8 +1774,8 @@ async function renderLivreursPanel() {
 
   el.innerHTML = `<table class="data-table"><thead><tr><th>Livreur</th><th>Téléphone</th><th>Prix/km</th><th>Statut config</th><th>En ligne</th><th>Dernière activité</th><th>Livraisons</th></tr></thead><tbody>
     ${allLivreurs.map(l => {
-      const configAvail = l.livreur_config?.is_available !== false;
       const lStatus = allLivreurStatus.find(s => s.livreur_id === l.id);
+      const configAvail = lStatus?.is_available !== false;
       const isOnline = lStatus?.is_available === true;
       const lastSeen = lStatus?.updated_at ? fmtDate(lStatus.updated_at) : '—';
       const myOrders = allOrders.filter(o => o.livreur_id === l.id && ['picked_up', 'on_the_way'].includes(o.status)).length;
@@ -1581,7 +1787,7 @@ async function renderLivreursPanel() {
           </div>
         </td>
         <td>${l.phone || '—'}</td>
-        <td style="font-family:'Space Mono';">${l.livreur_config?.price_per_km || 1000} FCFA/km</td>
+        <td style="font-family:'Space Mono';">${lStatus?.price_per_km || 500} FCFA/km</td>
         <td><span class="badge ${configAvail ? 'badge-ready' : 'badge-cancelled'}">${configAvail ? '✅ Disponible' : '❌ Occupé'}</span></td>
         <td><span class="badge ${isOnline ? 'badge-online' : 'badge-offline'}">${isOnline ? '🟢 En ligne' : '⚫ Hors ligne'}</span></td>
         <td style="font-size:.78rem;color:var(--text-muted);">${lastSeen}</td>
