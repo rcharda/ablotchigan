@@ -1,0 +1,1804 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ablô Tchigan — Espace Vendeur</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#0F1117;--sidebar:#161A25;--card:#1C2130;--card2:#232839;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.12);
+  --gold:#F59E0B;--gold-dark:#D97706;--gold-glow:rgba(245,158,11,.15);
+  --green:#22C55E;--red:#EF4444;--blue:#3B82F6;--purple:#8B5CF6;
+  --text:#F1F0EE;--text-muted:#8B9AAD;--text-dim:#4A5568;
+  --shadow:0 4px 24px rgba(0,0,0,.4);--r:14px;--r-sm:8px;
+}
+html{height:100%;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+/* LOGIN */
+#loginScreen{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;}
+.login-box{width:100%;max-width:420px;padding:0 20px;}
+.login-logo{text-align:center;margin-bottom:36px;}
+.login-logo-img{width:80px;height:80px;border-radius:20px;object-fit:cover;border:3px solid var(--gold-glow);margin-bottom:12px;}
+.login-logo h1{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;color:var(--text);}
+.login-logo h1 span{color:var(--gold);}
+.login-logo p{color:var(--text-muted);font-size:.9rem;margin-top:4px;}
+.login-card{background:var(--card);border:1px solid var(--border2);border-radius:var(--r);padding:32px;}
+.login-card h2{font-family:'Syne',sans-serif;font-size:1.15rem;margin-bottom:24px;}
+.f-group{margin-bottom:16px;}
+.f-label{font-size:.78rem;font-weight:700;color:var(--text-muted);margin-bottom:6px;display:block;text-transform:uppercase;letter-spacing:.8px;}
+.f-input{width:100%;background:var(--bg);border:1.5px solid var(--border2);border-radius:var(--r-sm);padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.95rem;transition:border .2s;}
+.f-input:focus{outline:none;border-color:var(--gold);}
+textarea.f-input{resize:vertical;min-height:80px;}
+select.f-input{cursor:pointer;}
+
+/* BUTTONS */
+.btn{border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;border-radius:var(--r-sm);transition:all .2s;display:inline-flex;align-items:center;gap:6px;font-size:.9rem;}
+.btn-gold{background:var(--gold);color:#1A1000;padding:11px 22px;}
+.btn-gold:hover{background:var(--gold-dark);transform:translateY(-1px);}
+.btn-ghost{background:rgba(255,255,255,.06);color:var(--text-muted);padding:9px 18px;border:1px solid var(--border);}
+.btn-ghost:hover{background:rgba(255,255,255,.1);color:var(--text);}
+.btn-danger{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.25);padding:8px 16px;}
+.btn-danger:hover{background:rgba(239,68,68,.25);}
+.btn-success{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.25);padding:8px 16px;}
+.btn-success:hover{background:rgba(34,197,94,.25);}
+.btn-sm{padding:6px 13px;font-size:.82rem;}
+.btn-full{width:100%;justify-content:center;}
+.btn-icon{width:34px;height:34px;padding:0;justify-content:center;font-size:1rem;}
+
+/* LAYOUT */
+#app{display:none;min-height:100vh;}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:240px;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100;transition:transform .3s;}
+.sidebar-brand{padding:20px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.sb-logo{width:38px;height:38px;border-radius:10px;object-fit:cover;border:2px solid var(--gold-glow);}
+.brand-name{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;}
+.brand-name span{color:var(--gold);}
+.brand-sub{font-size:.7rem;color:var(--text-muted);margin-top:1px;}
+.sidebar-nav{flex:1;padding:14px 10px;overflow-y:auto;}
+.nav-section{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);padding:12px 8px 5px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:var(--r-sm);cursor:pointer;color:var(--text-muted);font-size:.88rem;font-weight:500;margin-bottom:2px;transition:all .15s;border:1px solid transparent;}
+.nav-item:hover{background:rgba(255,255,255,.05);color:var(--text);}
+.nav-item.active{background:var(--gold-glow);color:var(--gold);border-color:rgba(245,158,11,.2);}
+.nav-icon{font-size:1rem;width:20px;text-align:center;}
+.nav-badge{margin-left:auto;background:var(--red);color:white;border-radius:20px;padding:1px 7px;font-size:.7rem;font-weight:700;}
+.sidebar-footer{padding:14px;border-top:1px solid var(--border);}
+.sidebar-user{display:flex;align-items:center;gap:10px;}
+.user-avatar{width:34px;height:34px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:700;color:#1A1000;font-size:.9rem;flex-shrink:0;}
+.user-name{font-size:.85rem;font-weight:600;}
+.user-role{font-size:.7rem;color:var(--text-muted);}
+.main-content{margin-left:240px;min-height:100vh;}
+.topbar{background:var(--sidebar);border-bottom:1px solid var(--border);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.topbar-title{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.notif-btn{position:relative;width:36px;height:36px;background:rgba(255,255,255,.05);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid var(--border);font-size:1rem;}
+.notif-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;background:var(--red);border-radius:50%;display:none;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.7;transform:scale(1.3)}}
+.page-content{padding:24px;}
+.panel{display:none;}.panel.active{display:block;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:0;right:0;width:70px;height:70px;border-radius:50%;opacity:.07;transform:translate(15px,-15px);}
+.stat-card.gold::before{background:var(--gold);}
+.stat-card.green::before{background:var(--green);}
+.stat-card.blue::before{background:var(--blue);}
+.stat-card.red::before{background:var(--red);}
+.stat-label{font-size:.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;}
+.stat-value{font-family:'Space Mono',monospace;font-size:1.7rem;font-weight:700;}
+.stat-card.gold .stat-value{color:var(--gold);}
+.stat-card.green .stat-value{color:var(--green);}
+.stat-card.blue .stat-value{color:var(--blue);}
+.stat-card.red .stat-value{color:var(--red);}
+.stat-sub{font-size:.74rem;color:var(--text-muted);margin-top:4px;}
+
+/* SECTION CARDS */
+.section-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:20px;}
+.section-card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.section-card-title{font-family:'Syne',sans-serif;font-size:.98rem;font-weight:700;}
+.section-card-body{padding:20px;}
+
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse;}
+.data-table th{padding:9px 12px;text-align:left;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text-dim);border-bottom:1px solid var(--border);}
+.data-table td{padding:12px;border-bottom:1px solid var(--border);font-size:.87rem;vertical-align:middle;}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tr:hover td{background:rgba(255,255,255,.02);}
+.actions{display:flex;gap:6px;flex-wrap:wrap;}
+
+/* BADGES */
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700;letter-spacing:.4px;}
+.badge-pending{background:rgba(245,158,11,.15);color:var(--gold);}
+.badge-confirmed{background:rgba(59,130,246,.15);color:var(--blue);}
+.badge-preparing{background:rgba(139,92,246,.15);color:var(--purple);}
+.badge-ready{background:rgba(34,197,94,.15);color:var(--green);}
+.badge-picked_up{background:rgba(34,197,94,.2);color:#4ADE80;}
+.badge-on_the_way{background:rgba(59,130,246,.2);color:#60A5FA;}
+.badge-delivered{background:rgba(34,197,94,.1);color:#86EFAC;}
+.badge-cancelled{background:rgba(239,68,68,.15);color:var(--red);}
+.badge-paid{background:rgba(34,197,94,.15);color:var(--green);}
+.badge-cod{background:rgba(245,158,11,.12);color:var(--gold);}
+.badge-online{background:rgba(34,197,94,.15);color:var(--green);}
+.badge-offline{background:rgba(74,85,104,.2);color:var(--text-dim);}
+
+/* ORDER CARD */
+.order-card{background:var(--card2);border:1px solid var(--border);border-radius:var(--r-sm);padding:16px;margin-bottom:10px;transition:border .2s;}
+.order-card:hover{border-color:var(--border2);}
+.order-card.new-order{border-color:rgba(245,158,11,.4);animation:glowIn .5s ease;}
+@keyframes glowIn{from{box-shadow:0 0 0 4px rgba(245,158,11,.3)}to{box-shadow:none}}
+.order-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+.order-num{font-family:'Space Mono',monospace;font-weight:700;font-size:.92rem;}
+.order-time{font-size:.75rem;color:var(--text-muted);margin-top:2px;}
+.order-items-preview{font-size:.84rem;color:var(--text-muted);margin-bottom:8px;line-height:1.5;}
+.order-meta{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+.order-meta span{font-size:.78rem;color:var(--text-muted);}
+.order-meta strong{color:var(--text);}
+.order-actions{display:flex;gap:7px;margin-top:12px;flex-wrap:wrap;}
+.sf-btn{padding:5px 13px;border-radius:20px;font-size:.76rem;font-weight:600;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--text-muted);transition:all .18s;}
+.sf-btn:hover,.sf-btn.active{background:var(--gold-glow);color:var(--gold);border-color:rgba(245,158,11,.3);}
+.sf-btn.all.active{background:rgba(255,255,255,.08);color:var(--text);border-color:var(--border2);}
+.status-flow{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:16px;}
+
+/* FORM GRID */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.form-grid .span-2{grid-column:1/-1;}
+
+/* IMAGE UPLOAD */
+.img-upload-zone{width:100%;height:160px;background:var(--bg);border:2px dashed var(--border2);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;cursor:pointer;transition:border .2s,background .2s;position:relative;overflow:hidden;}
+.img-upload-zone:hover{border-color:var(--gold);background:var(--gold-glow);}
+.img-upload-zone img.preview-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:var(--r-sm);}
+.img-upload-zone .upload-label{font-size:.85rem;color:var(--text-muted);text-align:center;z-index:1;pointer-events:none;}
+.img-upload-zone .upload-overlay{position:absolute;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:white;font-size:.82rem;border-radius:var(--r-sm);}
+.img-upload-zone:hover .upload-overlay{display:flex;}
+.upload-progress{display:none;position:absolute;bottom:0;left:0;height:3px;background:var(--gold);transition:width .3s;border-radius:0 0 var(--r-sm) var(--r-sm);}
+
+/* TOGGLE */
+.toggle-wrap{display:flex;align-items:center;gap:10px;}
+.toggle{appearance:none;width:40px;height:22px;background:var(--card2);border-radius:11px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;}
+.toggle:checked{background:var(--gold);}
+.toggle::after{content:'';position:absolute;width:16px;height:16px;background:white;border-radius:50%;top:3px;left:3px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);}
+.toggle:checked::after{left:21px;}
+.toggle-label{font-size:.87rem;color:var(--text-muted);}
+
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:18px;}
+.tab{padding:9px 16px;cursor:pointer;font-size:.87rem;font-weight:600;color:var(--text-muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+
+/* TOAST */
+#toastBox{position:fixed;top:18px;right:18px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+.toast{background:var(--card);border:1px solid var(--border2);border-radius:var(--r-sm);padding:11px 16px;font-size:.87rem;box-shadow:var(--shadow);animation:slideIn .3s;display:flex;align-items:center;gap:10px;max-width:300px;pointer-events:auto;}
+.toast.success{border-left:3px solid var(--green);}
+.toast.error{border-left:3px solid var(--red);}
+.toast.info{border-left:3px solid var(--gold);}
+@keyframes slideIn{from{transform:translateX(110%);opacity:0}to{transform:none;opacity:1}}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:800;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--card);border:1px solid var(--border2);border-radius:var(--r);width:100%;max-width:580px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow);}
+.modal.wide{max-width:700px;}
+.modal-hd{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--card);z-index:1;}
+.modal-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;}
+.modal-close{background:none;border:none;color:var(--text-muted);font-size:1.3rem;cursor:pointer;line-height:1;padding:4px;}
+.modal-bd{padding:22px;}
+.modal-ft{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;}
+
+/* NOTIF PANEL */
+.notif-panel{position:fixed;right:16px;top:68px;width:320px;background:var(--card);border:1px solid var(--border2);border-radius:var(--r);box-shadow:var(--shadow);z-index:400;display:none;max-height:480px;overflow:hidden;flex-direction:column;}
+.notif-panel.open{display:flex;}
+.notif-panel-head{padding:12px 16px;border-bottom:1px solid var(--border);font-family:'Syne',sans-serif;font-weight:700;font-size:.88rem;display:flex;justify-content:space-between;align-items:center;}
+.notif-list{overflow-y:auto;flex:1;}
+.notif-item{padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;font-size:.85rem;}
+.notif-item:hover{background:rgba(255,255,255,.03);}
+.notif-item.unread{border-left:3px solid var(--gold);}
+.notif-time{font-size:.7rem;color:var(--text-dim);margin-top:3px;}
+
+/* LIVREUR */
+.livreur-list{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+.livreur-item{display:flex;align-items:center;gap:12px;padding:11px;background:var(--card2);border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;transition:border .18s;}
+.livreur-item:hover,.livreur-item.sel{border-color:var(--gold);}
+.livreur-avatar{width:36px;height:36px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;flex-shrink:0;color:white;}
+.livreur-info .lname{font-weight:600;font-size:.88rem;}
+.livreur-info .lphone{font-size:.75rem;color:var(--text-muted);}
+
+/* EVENT CARDS */
+.event-request-card{background:var(--card2);border:1px solid var(--border);border-radius:var(--r-sm);padding:15px;margin-bottom:10px;}
+.event-field{margin-bottom:7px;font-size:.84rem;display:flex;gap:8px;}
+.event-field .label{color:var(--text-muted);min-width:90px;flex-shrink:0;}
+.event-field .val{color:var(--text);font-weight:500;}
+
+/* EMPTY */
+.empty{text-align:center;padding:44px 24px;color:var(--text-muted);}
+.empty-icon{font-size:44px;margin-bottom:12px;}
+
+/* MENU ITEM CHECK */
+.dm-item-row{background:var(--card2);border:1px solid var(--border);border-radius:var(--r-sm);padding:13px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px;}
+.dm-item-row img{width:44px;height:44px;border-radius:8px;object-fit:cover;flex-shrink:0;}
+.dm-item-img-ph{width:44px;height:44px;border-radius:8px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
+
+/* ITEM CHIP */
+.item-chip{display:inline-flex;align-items:center;gap:5px;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.78rem;cursor:pointer;transition:all .13s;}
+.item-chip:hover,.item-chip.sel{border-color:var(--gold);color:var(--gold);background:var(--gold-glow);}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:none;}
+  .main-content{margin-left:0;}
+  .form-grid{grid-template-columns:1fr;}
+  .page-content{padding:14px;}
+  .topbar{padding:0 14px;}
+  .menu-toggle{display:flex !important;}
+}
+.menu-toggle{display:none;width:36px;height:36px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:var(--r-sm);align-items:center;justify-content:center;cursor:pointer;font-size:1.1rem;}
+
+/* COLOR indicator */
+.color-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:5px;}
+.color-dot.green{background:var(--green);}
+.color-dot.red{background:var(--red);}
+
+/* PACK GRID */
+.packs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;}
+.pack-card-adm{background:var(--card2);border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;transition:border .2s;}
+.pack-card-adm:hover{border-color:var(--border2);}
+.pack-card-adm img{width:100%;height:130px;object-fit:cover;}
+.pack-card-adm .pack-no-img{width:100%;height:130px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:2.5rem;}
+.pack-card-adm .pack-info{padding:12px;}
+.pack-card-adm .pack-name{font-weight:700;font-size:.9rem;margin-bottom:4px;}
+.pack-card-adm .pack-price{font-family:'Space Mono';color:var(--gold);font-size:.88rem;font-weight:700;}
+.pack-card-adm .pack-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+
+/* REALTIME INDICATOR */
+.realtime-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;display:inline-block;margin-right:5px;}
+
+/* CLIENT CARD */
+.client-card-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r-sm);background:var(--card2);border:1px solid var(--border);margin-bottom:8px;transition:border .15s;}
+.client-card-row:hover{border-color:var(--border2);}
+</style>
+</head>
+<body>
+
+<div id="toastBox"></div>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <img class="login-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Ablotchigan.png/200px-Ablotchigan.png" onerror="this.style.display='none'" alt="Logo">
+      <h1>Ablô <span>Tchigan</span></h1>
+      <p>Espace Vendeur · Administration</p>
+    </div>
+    <div class="login-card">
+      <h2>🔐 Connexion vendeur</h2>
+      <div class="f-group"><label class="f-label">Email</label><input id="lEmail" type="email" class="f-input" placeholder="vendeur@ablotchigan.bj"></div>
+      <div class="f-group"><label class="f-label">Mot de passe</label><input id="lPass" type="password" class="f-input" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="btn btn-gold btn-full" onclick="doLogin()" style="margin-top:8px;font-size:1rem;padding:13px;">Accéder au tableau de bord →</button>
+    </div>
+  </div>
+</div>
+
+<!-- APPLICATION -->
+<div id="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <img class="sb-logo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Ablotchigan.png/200px-Ablotchigan.png" onerror="this.style.display='none'" alt="">
+      <div><div class="brand-name">Ablô <span>Tchigan</span></div><div class="brand-sub">⚙️ Espace Vendeur</div></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Vue générale</div>
+      <div class="nav-item active" onclick="showPanel('dashboard')"><span class="nav-icon">📊</span>Tableau de bord</div>
+      <div class="nav-section">Commandes</div>
+      <div class="nav-item" onclick="showPanel('orders')">
+        <span class="nav-icon">📦</span>Commandes
+        <span class="nav-badge" id="pendingBadge" style="display:none;">0</span>
+      </div>
+      <div class="nav-item" onclick="showPanel('events')">
+        <span class="nav-icon">🎊</span>Événements
+        <span class="nav-badge" id="eventBadge" style="display:none;">0</span>
+      </div>
+      <div class="nav-section">Menu & Catalogue</div>
+      <div class="nav-item" onclick="showPanel('dailymenu')"><span class="nav-icon">📅</span>Menu du jour</div>
+      <div class="nav-item" onclick="showPanel('packs')"><span class="nav-icon">🎁</span>Packs</div>
+      <div class="nav-item" onclick="showPanel('items')"><span class="nav-icon">🍽️</span>Articles</div>
+      <div class="nav-item" onclick="showPanel('categories')"><span class="nav-icon">🏷️</span>Catégories</div>
+      <div class="nav-section">Équipe & Clients</div>
+      <div class="nav-item" onclick="showPanel('livreurs')"><span class="nav-icon">🛵</span>Livreurs</div>
+      <div class="nav-item" onclick="showPanel('clients')"><span class="nav-icon">👥</span>Clients</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sideAvatar">V</div>
+        <div><div class="user-name" id="sideUserName">Vendeur</div><div class="user-role">Vendeur · Ablô Tchigan</div></div>
+      </div>
+      <button class="btn btn-ghost btn-sm btn-full" style="margin-top:10px;" onclick="doLogout()">Déconnexion</button>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="menu-toggle" onclick="toggleSidebar()">☰</div>
+        <div>
+          <div class="topbar-title" id="topbarTitle">Tableau de bord</div>
+          <div style="font-size:.72rem;color:var(--text-muted);"><span class="realtime-dot" id="realtimeDot"></span><span id="realtimeLabel">Connexion…</span></div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="notif-btn" onclick="toggleNotifPanel()">🔔 <span class="notif-dot" id="notifDot"></span></div>
+        <div style="font-size:.78rem;color:var(--text-muted);" id="topbarDate"></div>
+      </div>
+    </div>
+
+    <div class="page-content">
+
+      <!-- DASHBOARD -->
+      <div id="panel-dashboard" class="panel active">
+        <div class="stats-grid">
+          <div class="stat-card gold"><div class="stat-label">Commandes aujourd'hui</div><div class="stat-value" id="s1">—</div><div class="stat-sub">toutes statuts</div></div>
+          <div class="stat-card green"><div class="stat-label">Revenus du jour</div><div class="stat-value" id="s2">—</div><div class="stat-sub">FCFA livrées</div></div>
+          <div class="stat-card blue"><div class="stat-label">En cours</div><div class="stat-value" id="s3">—</div><div class="stat-sub">en préparation/route</div></div>
+          <div class="stat-card red"><div class="stat-label">En attente</div><div class="stat-value" id="s4">—</div><div class="stat-sub">à confirmer</div></div>
+        </div>
+        <div class="section-card">
+          <div class="section-card-header">
+            <span class="section-card-title">📦 Commandes récentes</span>
+            <button class="btn btn-ghost btn-sm" onclick="showPanel('orders')">Voir tout →</button>
+          </div>
+          <div class="section-card-body" style="padding:0;" id="recentOrdersContainer">
+            <div class="empty"><div class="empty-icon">📦</div>Chargement…</div>
+          </div>
+        </div>
+        <div class="section-card">
+          <div class="section-card-header">
+            <span class="section-card-title">🛵 Livreurs en ligne</span>
+            <button class="btn btn-ghost btn-sm" onclick="showPanel('livreurs')">Gérer →</button>
+          </div>
+          <div class="section-card-body" id="dashLivreursContainer">
+            <div class="empty"><div class="empty-icon">🛵</div>Chargement…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COMMANDES -->
+      <div id="panel-orders" class="panel">
+        <div class="section-card">
+          <div class="section-card-header">
+            <span class="section-card-title">📦 Gestion des commandes</span>
+            <button class="btn btn-ghost btn-sm" onclick="refreshOrders()">🔄 Actualiser</button>
+          </div>
+          <div class="section-card-body">
+            <div class="status-flow">
+              <button class="sf-btn all active" onclick="filterOrders('all',this)">Toutes</button>
+              <button class="sf-btn" onclick="filterOrders('pending',this)">⏳ En attente</button>
+              <button class="sf-btn" onclick="filterOrders('confirmed',this)">✅ Confirmées</button>
+              <button class="sf-btn" onclick="filterOrders('preparing',this)">👨‍🍳 En cuisine</button>
+              <button class="sf-btn" onclick="filterOrders('ready',this)">🟢 Prêtes</button>
+              <button class="sf-btn" onclick="filterOrders('on_the_way',this)">🛵 En route</button>
+              <button class="sf-btn" onclick="filterOrders('delivered',this)">✔️ Livrées</button>
+            </div>
+            <div id="ordersContainer"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ÉVÉNEMENTS -->
+      <div id="panel-events" class="panel">
+        <div class="section-card">
+          <div class="section-card-header">
+            <span class="section-card-title">🎊 Demandes d'événements</span>
+            <span id="eventCount" class="badge badge-pending">0 en attente</span>
+          </div>
+          <div class="section-card-body" id="eventsContainer">
+            <div class="empty"><div class="empty-icon">🎊</div>Chargement…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MENU DU JOUR -->
+      <div id="panel-dailymenu" class="panel">
+        <div class="section-card" style="margin-bottom:18px;">
+          <div class="section-card-header">
+            <div>
+              <div class="section-card-title">📅 Publier le menu du jour</div>
+              <div style="font-size:.78rem;color:var(--text-muted);margin-top:3px;" id="dmDateLabel">Aujourd'hui</div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+              <input type="date" id="dmDate" class="f-input" style="width:155px;">
+              <button class="btn btn-gold btn-sm" onclick="saveDailyMenu()">💾 Publier</button>
+            </div>
+          </div>
+          <div class="section-card-body">
+            <div style="font-size:.85rem;color:var(--text-muted);margin-bottom:14px;">Sélectionnez les articles à inclure dans le menu du jour.</div>
+            <div id="dmItemsList"></div>
+          </div>
+        </div>
+        <div class="section-card">
+          <div class="section-card-header"><span class="section-card-title">📆 Menus publiés récemment</span></div>
+          <div id="dmHistoryTable" style="padding:16px;">Chargement…</div>
+        </div>
+      </div>
+
+      <!-- PACKS -->
+      <div id="panel-packs" class="panel">
+        <div class="section-card">
+          <div class="section-card-header">
+            <span class="section-card-title">🎁 Packs / Catalogues</span>
+            <button class="btn btn-gold btn-sm" onclick="openPackModal()">＋ Nouveau pack</button>
+          </div>
+          <div class="section-card-body" id="packsContainer">Chargement…</div>
+        </div>
+      </div>
+
+      <!-- ARTICLES -->
+      <div id="panel-items" class="panel">
+        <div class="section-card">
+          <div class="section-card-header">
+            <span class="section-card-title">🍽️ Articles du menu</span>
+            <button class="btn btn-gold btn-sm" onclick="openItemModal()">＋ Nouvel article</button>
+          </div>
+          <div class="section-card-body" style="padding:0;"><div id="itemsTable" style="padding:16px;">Chargement…</div></div>
+        </div>
+      </div>
+
+      <!-- CATÉGORIES -->
+      <div id="panel-categories" class="panel">
+        <div class="section-card">
+          <div class="section-card-header">
+            <span class="section-card-title">🏷️ Catégories</span>
+            <button class="btn btn-gold btn-sm" onclick="openCatModal()">＋ Nouvelle catégorie</button>
+          </div>
+          <div class="section-card-body" style="padding:0;"><div id="catsTable" style="padding:16px;">Chargement…</div></div>
+        </div>
+      </div>
+
+      <!-- LIVREURS -->
+      <div id="panel-livreurs" class="panel">
+        <div class="section-card">
+          <div class="section-card-header">
+            <span class="section-card-title">🛵 Gestion des livreurs</span>
+            <button class="btn btn-ghost btn-sm" onclick="renderLivreursPanel()">🔄 Actualiser</button>
+          </div>
+          <div class="section-card-body" id="livreursPanel">Chargement…</div>
+        </div>
+      </div>
+
+      <!-- CLIENTS -->
+      <div id="panel-clients" class="panel">
+        <div class="section-card">
+          <div class="section-card-header">
+            <span class="section-card-title">👥 Liste des clients</span>
+            <span id="clientsCount" class="badge badge-confirmed">0 client(s)</span>
+          </div>
+          <div class="section-card-body" style="padding:0;" id="clientsPanel">
+            <div class="empty"><div class="empty-icon">👥</div>Chargement…</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /page-content -->
+  </div><!-- /main-content -->
+</div><!-- /app -->
+
+<!-- NOTIF PANEL -->
+<div class="notif-panel" id="notifPanel">
+  <div class="notif-panel-head">
+    <span>🔔 Notifications</span>
+    <button class="btn btn-ghost btn-sm" onclick="clearNotifs()">Tout lire</button>
+  </div>
+  <div class="notif-list" id="notifList">
+    <div class="empty" style="padding:30px;"><div class="empty-icon">🔔</div>Aucune notification</div>
+  </div>
+</div>
+
+<!-- MODAL: ASSIGN LIVREUR -->
+<div id="assignModal" class="modal-bg">
+  <div class="modal">
+    <div class="modal-hd"><span class="modal-title">🛵 Assigner un livreur</span><button class="modal-close" onclick="closeModal('assignModal')">✕</button></div>
+    <div class="modal-bd">
+      <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:14px;">Sélectionnez un livreur disponible pour cette commande.</p>
+      <div class="livreur-list" id="livreurList">Chargement…</div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" onclick="closeModal('assignModal')">Annuler</button>
+      <button class="btn btn-gold" onclick="confirmAssign()">✅ Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ORDER DETAIL -->
+<div id="orderDetailModal" class="modal-bg">
+  <div class="modal wide">
+    <div class="modal-hd"><span class="modal-title" id="odTitle">Commande</span><button class="modal-close" onclick="closeModal('orderDetailModal')">✕</button></div>
+    <div class="modal-bd" id="odBody"></div>
+    <div class="modal-ft" id="odFooter"></div>
+  </div>
+</div>
+
+<!-- MODAL: PACK FORM -->
+<div id="packModal" class="modal-bg">
+  <div class="modal">
+    <div class="modal-hd"><span class="modal-title" id="packModalTitle">Nouveau pack</span><button class="modal-close" onclick="closeModal('packModal')">✕</button></div>
+    <div class="modal-bd">
+      <div class="form-grid">
+        <div class="f-group span-2">
+          <label class="f-label">Photo du pack</label>
+          <div class="img-upload-zone" id="packImgZone" onclick="triggerUpload('packImgInput','packImgZone','packImgUrl')">
+            <img class="preview-img" id="packImgPreview" src="" style="display:none;" alt="">
+            <div class="upload-overlay">📷 Changer l'image</div>
+            <div class="upload-label">📷 Cliquez pour importer<br><span style="font-size:.75rem;">JPG, PNG, WEBP — max 5 Mo</span></div>
+            <div class="upload-progress" id="packUploadProg"></div>
+          </div>
+          <input type="file" id="packImgInput" accept="image/*" style="display:none;" onchange="handleImageUpload(this,'packImgZone','packImgPreview','packImgUrl','packUploadProg')">
+          <input type="hidden" id="packImgUrl">
+        </div>
+        <div class="f-group span-2"><label class="f-label">Nom du pack</label><input id="pName" class="f-input" placeholder="Ex : Pack Famille Ablô"></div>
+        <div class="f-group span-2"><label class="f-label">Description</label><textarea id="pDesc" class="f-input" placeholder="Décrivez ce pack…"></textarea></div>
+        <div class="f-group span-2"><label class="f-label">Contenu détaillé</label><input id="pItems" class="f-input" placeholder="Ex : 1 poulet entier + frites + boisson"></div>
+        <div class="f-group"><label class="f-label">Prix (FCFA)</label><input id="pPrice" type="number" class="f-input" placeholder="2500"></div>
+        <div class="f-group"><label class="f-label">Disponibilité</label>
+          <div class="toggle-wrap" style="margin-top:10px;"><input type="checkbox" id="pActive" class="toggle" checked><label for="pActive" class="toggle-label">Pack visible aux clients</label></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" onclick="closeModal('packModal')">Annuler</button>
+      <button class="btn btn-gold" onclick="savePack()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ITEM FORM -->
+<div id="itemModal" class="modal-bg">
+  <div class="modal">
+    <div class="modal-hd"><span class="modal-title" id="itemModalTitle">Nouvel article</span><button class="modal-close" onclick="closeModal('itemModal')">✕</button></div>
+    <div class="modal-bd">
+      <div class="form-grid">
+        <div class="f-group span-2">
+          <label class="f-label">Photo de l'article</label>
+          <div class="img-upload-zone" id="itemImgZone" onclick="triggerUpload('itemImgInput','itemImgZone','itemImgUrl')">
+            <img class="preview-img" id="itemImgPreview" src="" style="display:none;" alt="">
+            <div class="upload-overlay">📷 Changer l'image</div>
+            <div class="upload-label">📷 Cliquez pour importer<br><span style="font-size:.75rem;">JPG, PNG, WEBP — max 5 Mo</span></div>
+            <div class="upload-progress" id="itemUploadProg"></div>
+          </div>
+          <input type="file" id="itemImgInput" accept="image/*" style="display:none;" onchange="handleImageUpload(this,'itemImgZone','itemImgPreview','itemImgUrl','itemUploadProg')">
+          <input type="hidden" id="itemImgUrl">
+        </div>
+        <div class="f-group span-2"><label class="f-label">Nom de l'article</label><input id="iName" class="f-input" placeholder="Ex : Gésiers grillés"></div>
+        <div class="f-group span-2"><label class="f-label">Description</label><textarea id="iDesc" class="f-input" placeholder="Description courte…"></textarea></div>
+        <div class="f-group"><label class="f-label">Prix (FCFA)</label><input id="iPrice" type="number" class="f-input"></div>
+        <div class="f-group"><label class="f-label">Catégorie</label><select id="iCat" class="f-input"><option value="">— Choisir —</option></select></div>
+        <div class="f-group span-2">
+          <div class="toggle-wrap"><input type="checkbox" id="iAvail" class="toggle" checked><label for="iAvail" class="toggle-label">Article disponible</label></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" onclick="closeModal('itemModal')">Annuler</button>
+      <button class="btn btn-gold" onclick="saveItem()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CATÉGORIE FORM -->
+<div id="catModal" class="modal-bg">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-hd"><span class="modal-title" id="catModalTitle">Nouvelle catégorie</span><button class="modal-close" onclick="closeModal('catModal')">✕</button></div>
+    <div class="modal-bd">
+      <div class="f-group"><label class="f-label">Nom</label><input id="cName" class="f-input" placeholder="Ex : Poulets"></div>
+      <div class="f-group"><label class="f-label">Emoji / Icône</label><input id="cIcon" class="f-input" placeholder="🍗"></div>
+      <div class="f-group"><label class="f-label">Ordre d'affichage</label><input id="cOrder" type="number" class="f-input" value="0"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" onclick="closeModal('catModal')">Annuler</button>
+      <button class="btn btn-gold" onclick="saveCat()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EVENT QUOTE -->
+<div id="quoteModal" class="modal-bg">
+  <div class="modal">
+    <div class="modal-hd"><span class="modal-title">📄 Envoyer un devis</span><button class="modal-close" onclick="closeModal('quoteModal')">✕</button></div>
+    <div class="modal-bd">
+      <div id="quoteEventInfo" style="background:var(--card2);border-radius:var(--r-sm);padding:13px;margin-bottom:16px;font-size:.87rem;"></div>
+      <div class="f-group"><label class="f-label">Montant du devis (FCFA)</label><input id="quoteAmount" type="number" class="f-input" placeholder="Ex : 75000"></div>
+      <div class="f-group"><label class="f-label">Message / Détails</label><textarea id="quoteMessage" class="f-input" placeholder="Menu, conditions, délai…"></textarea></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" onclick="closeModal('quoteModal')">Annuler</button>
+      <button class="btn btn-gold" onclick="submitQuote()">📨 Envoyer le devis</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════
+const SUPABASE_URL = 'https://wpohqvyufivdbazhnoxj.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indwb2hxdnl1Zml2ZGJhemhub3hqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczODU2NTMsImV4cCI6MjA5Mjk2MTY1M30.04wryPjY62JLyCakjnyNX9LFGzmqFBDIUHFACVXbqZ4';
+const STORAGE_BUCKET = 'restaurant-images';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let currentUser = null, currentProfile = null;
+let allOrders = [], allItems = [], allPacks = [], allCats = [], allLivreurs = [], allClients = [];
+let allLivreurStatus = []; // statuts temps réel livreurs
+let filteredStatus = 'all';
+let editingPack = null, editingItem = null, editingCat = null;
+let assigningOrderId = null, selectedLivreurId = null;
+let eventRequests = [];
+let quotingEventId = null;
+let notifications = [];
+let dmSelections = {};
+let orderChannel = null;
+let realtimeConnected = false;
+
+// ═══════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════
+const STATUS_LABELS = {
+  pending: '⏳ En attente', confirmed: '✅ Confirmée', preparing: '👨‍🍳 En cuisine',
+  ready: '🟢 Prête', picked_up: '🚀 Récupérée', on_the_way: '🛵 En route',
+  delivered: '✔️ Livrée', cancelled: '❌ Annulée'
+};
+const STATUS_NEXT = { pending: 'confirmed', confirmed: 'preparing', preparing: 'ready' };
+
+// ═══════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════
+const fmtNum = n => Math.round(n || 0).toLocaleString('fr-FR');
+const fmtDate = d => {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+};
+const parseItems = raw => { try { return JSON.parse(raw || '[]'); } catch { return []; } };
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function toast(msg, type = 'info') {
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.innerHTML = `<span>${msg}</span><span style="cursor:pointer;opacity:.6;margin-left:auto;" onclick="this.parentElement.remove()">✕</span>`;
+  document.getElementById('toastBox').appendChild(t);
+  setTimeout(() => t.remove(), 5000);
+}
+
+function updateTopbarDate() {
+  const el = document.getElementById('topbarDate');
+  if (el) el.textContent = new Date().toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
+// ═══════════════════════════════════════════════
+// NAVIGATION PANELS
+// ═══════════════════════════════════════════════
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelector(`.nav-item[onclick*="${id}"]`)?.classList.add('active');
+  const titles = {
+    dashboard: 'Tableau de bord', orders: 'Commandes', events: 'Événements',
+    dailymenu: 'Menu du jour', packs: 'Packs', items: 'Articles',
+    categories: 'Catégories', livreurs: 'Livreurs', clients: 'Clients'
+  };
+  document.getElementById('topbarTitle').textContent = titles[id] || id;
+  // Rendu à la navigation pour contenu frais
+  if (id === 'orders') renderOrders();
+  if (id === 'events') renderEventsPanel();
+  if (id === 'livreurs') renderLivreursPanel();
+  if (id === 'clients') renderClientsPanel();
+  if (id === 'dashboard') { renderDashboard(); renderDashLivreurs(); }
+}
+
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+function toggleNotifPanel() { document.getElementById('notifPanel').classList.toggle('open'); }
+
+// ═══════════════════════════════════════════════
+// IMAGE UPLOAD
+// ═══════════════════════════════════════════════
+function triggerUpload(inputId) { document.getElementById(inputId).click(); }
+
+async function resizeImage(file, maxSize = 900, quality = 0.85) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const ratio = Math.min(maxSize / img.width, maxSize / img.height, 1);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * ratio);
+        canvas.height = Math.round(img.height * ratio);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(blob => resolve(blob), 'image/jpeg', quality);
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handleImageUpload(input, zoneId, previewId, hiddenId, progId) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { toast('Image trop lourde (max 5 Mo)', 'error'); return; }
+  const previewEl = document.getElementById(previewId);
+  previewEl.src = URL.createObjectURL(file); previewEl.style.display = 'block';
+  const prog = document.getElementById(progId);
+  prog.style.display = 'block'; prog.style.width = '30%';
+  try {
+    const blob = await resizeImage(file);
+    prog.style.width = '60%';
+    const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.jpg`;
+    const { data, error } = await sb.storage.from(STORAGE_BUCKET).upload(fileName, blob, { contentType: 'image/jpeg', upsert: true });
+    if (error) {
+      const reader = new FileReader();
+      reader.onload = ev => { document.getElementById(hiddenId).value = ev.target.result; prog.style.width = '100%'; setTimeout(() => { prog.style.display = 'none'; }, 600); };
+      reader.readAsDataURL(blob);
+      toast('Stockage distant indisponible — image locale', 'info');
+      return;
+    }
+    const { data: urlData } = sb.storage.from(STORAGE_BUCKET).getPublicUrl(fileName);
+    document.getElementById(hiddenId).value = urlData.publicUrl;
+    previewEl.src = urlData.publicUrl;
+    prog.style.width = '100%';
+    setTimeout(() => { prog.style.display = 'none'; }, 600);
+    toast('Photo importée ✅', 'success');
+  } catch (err) {
+    toast('Erreur import image', 'error');
+    prog.style.display = 'none';
+    console.error(err);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════
+async function doLogin() {
+  const email = document.getElementById('lEmail').value;
+  const pass = document.getElementById('lPass').value;
+  if (!email || !pass) return toast('Email et mot de passe requis', 'error');
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) return toast(error.message, 'error');
+  await initApp();
+}
+
+async function initApp() {
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return;
+  const { data: prof } = await sb.from('profiles').select('*').eq('id', user.id).single();
+  if (!prof || !['vendeur', 'admin'].includes(prof.role)) {
+    await sb.auth.signOut();
+    return toast('Accès refusé — compte vendeur requis', 'error');
+  }
+  currentUser = user; currentProfile = prof;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('sideAvatar').textContent = (prof.full_name?.charAt(0) || 'V').toUpperCase();
+  document.getElementById('sideUserName').textContent = prof.full_name || 'Vendeur';
+  document.getElementById('dmDate').value = new Date().toISOString().slice(0, 10);
+  updateTopbarDate();
+  await loadAll();
+  subscribeToNewOrders();
+  if (Notification.permission === 'default') Notification.requestPermission();
+}
+
+async function doLogout() {
+  if (orderChannel) { sb.removeChannel(orderChannel); orderChannel = null; }
+  await sb.auth.signOut();
+  location.reload();
+}
+
+// ═══════════════════════════════════════════════
+// DATA LOADING — ROBUSTE
+// ═══════════════════════════════════════════════
+async function loadAll() {
+  await Promise.all([loadOrders(), loadItems(), loadPacks(), loadCategories(), loadLivreurs(), loadEvents(), loadClients()]);
+  renderDashboard();
+  renderDashLivreurs();
+  renderOrders();
+  renderDailyMenuForm();
+  renderPacksGrid();
+  renderItemsTable();
+  renderCatsTable();
+  renderEventsPanel();
+}
+
+async function loadOrders() {
+  // BUG FIX: utilise profiles!client_id pour éviter l'ambiguïté de FK
+  const { data, error } = await sb.from('orders')
+    .select('*, profiles!orders_client_id_fkey(full_name,phone)')
+    .order('created_at', { ascending: false })
+    .limit(300);
+  if (error) {
+    console.error('loadOrders error:', error);
+    // Fallback sans join si la FK ne s'appelle pas comme ça
+    const { data: data2, error: err2 } = await sb.from('orders')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(300);
+    if (!err2 && data2 && data2.length > 0) allOrders = data2;
+    return;
+  }
+  // BUG FIX: protection contre le remplacement par tableau vide
+  if (data && data.length > 0) allOrders = data;
+}
+
+async function loadItems() {
+  const { data } = await sb.from('menu_items').select('*, categories(name,icon)').order('created_at', { ascending: false });
+  allItems = data || [];
+}
+
+async function loadPacks() {
+  const { data } = await sb.from('packs').select('*').order('created_at', { ascending: false });
+  allPacks = data || [];
+}
+
+async function loadCategories() {
+  const { data } = await sb.from('categories').select('*').order('display_order');
+  allCats = data || [];
+}
+
+async function loadLivreurs() {
+  // Charge les profils livreurs + leur config + leur statut temps réel
+  const { data } = await sb.from('profiles')
+    .select('*, livreur_config(price_per_km, is_available)')
+    .eq('role', 'livreur');
+  allLivreurs = data || [];
+  // Charge aussi livreur_status pour online status
+  const { data: statusData } = await sb.from('livreur_status')
+    .select('livreur_id, is_available, updated_at, latitude, longitude')
+    .order('updated_at', { ascending: false });
+  allLivreurStatus = statusData || [];
+}
+
+async function loadEvents() {
+  const { data, error } = await sb.from('event_orders')
+    .select('*, profiles!event_orders_client_id_fkey(full_name)')
+    .order('created_at', { ascending: false });
+  if (error) {
+    console.error('loadEvents error:', error);
+    // Fallback sans join
+    const { data: d2 } = await sb.from('event_orders').select('*').order('created_at', { ascending: false });
+    if (d2 && d2.length > 0) eventRequests = d2;
+    return;
+  }
+  // BUG FIX: protection identique à loadOrders — ne pas écraser avec tableau vide
+  if (data && data.length > 0) eventRequests = data;
+}
+
+async function loadClients() {
+  const { data } = await sb.from('profiles').select('*').eq('role', 'client').order('created_at', { ascending: false });
+  allClients = data || [];
+}
+
+async function refreshOrders() {
+  toast('Actualisation…', 'info');
+  const { data, error } = await sb.from('orders')
+    .select('*, profiles!orders_client_id_fkey(full_name,phone)')
+    .order('created_at', { ascending: false })
+    .limit(300);
+  if (error) {
+    // Fallback
+    const { data: d2 } = await sb.from('orders').select('*').order('created_at', { ascending: false }).limit(300);
+    if (d2) allOrders = d2;
+  } else if (data) {
+    allOrders = data;
+  }
+  renderOrders();
+  renderDashboard();
+  toast('Commandes actualisées ✅', 'success');
+}
+
+// ═══════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════
+function renderDashboard() {
+  const today = new Date().toISOString().slice(0, 10);
+  const todayOrders = allOrders.filter(o => o.created_at?.slice(0, 10) === today);
+  const revenue = todayOrders.filter(o => o.status === 'delivered').reduce((a, o) => a + (o.total_amount || 0), 0);
+  const inProgress = allOrders.filter(o => ['confirmed', 'preparing', 'ready', 'picked_up', 'on_the_way'].includes(o.status)).length;
+  const pending = allOrders.filter(o => o.status === 'pending').length;
+
+  document.getElementById('s1').textContent = todayOrders.length;
+  document.getElementById('s2').textContent = fmtNum(revenue) + ' F';
+  document.getElementById('s3').textContent = inProgress;
+  document.getElementById('s4').textContent = pending;
+
+  const badge = document.getElementById('pendingBadge');
+  badge.textContent = pending; badge.style.display = pending ? 'inline-block' : 'none';
+
+  const rc = document.getElementById('recentOrdersContainer');
+  const recent = allOrders.slice(0, 6);
+  if (!recent.length) { rc.innerHTML = '<div class="empty"><div class="empty-icon">📦</div>Aucune commande</div>'; return; }
+  rc.innerHTML = `<table class="data-table"><thead><tr><th>#</th><th>Client</th><th>Total</th><th>Statut</th><th>Paiement</th><th></th></tr></thead><tbody>
+    ${recent.map(o => `<tr>
+      <td><span style="font-family:'Space Mono';font-size:.82rem;">#${o.order_number || o.id.slice(0, 8)}</span></td>
+      <td>${getClientName(o)}</td>
+      <td style="font-family:'Space Mono';font-weight:700;">${fmtNum(o.total_amount)} F</td>
+      <td><span class="badge badge-${o.status}">${STATUS_LABELS[o.status] || o.status}</span></td>
+      <td><span class="badge ${o.payment_status === 'paid' ? 'badge-paid' : 'badge-cod'}">${o.payment_status === 'paid' ? '💳 Online' : '💵 Porte'}</span></td>
+      <td><button class="btn btn-ghost btn-sm" onclick="openOrderDetail('${o.id}')">Voir</button></td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+
+function renderDashLivreurs() {
+  const el = document.getElementById('dashLivreursContainer');
+  if (!allLivreurs.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🛵</div>Aucun livreur enregistré</div>'; return; }
+  el.innerHTML = allLivreurs.map(l => {
+    const status = allLivreurStatus.find(s => s.livreur_id === l.id);
+    const isOnline = status?.is_available === true;
+    const lastSeen = status?.updated_at ? fmtDate(status.updated_at) : '—';
+    return `<div class="client-card-row">
+      <div class="livreur-avatar" style="width:32px;height:32px;font-size:.8rem;">${(l.full_name?.charAt(0) || 'L').toUpperCase()}</div>
+      <div style="flex:1;"><div style="font-weight:600;font-size:.88rem;">${l.full_name || '—'}</div><div style="font-size:.75rem;color:var(--text-muted);">${l.phone || '—'}</div></div>
+      <div style="text-align:right;">
+        <span class="badge ${isOnline ? 'badge-online' : 'badge-offline'}">${isOnline ? '🟢 En ligne' : '⚫ Hors ligne'}</span>
+        <div style="font-size:.7rem;color:var(--text-dim);margin-top:3px;">Vu : ${lastSeen}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Helper: nom du client depuis différents champs possibles
+function getClientName(o) {
+  return o.profiles?.full_name || o.customer_name || '—';
+}
+
+// ═══════════════════════════════════════════════
+// COMMANDES
+// ═══════════════════════════════════════════════
+function filterOrders(status, btn) {
+  filteredStatus = status;
+  document.querySelectorAll('.sf-btn').forEach(b => b.classList.remove('active'));
+  btn?.classList.add('active');
+  renderOrders();
+}
+
+function renderOrders() {
+  const el = document.getElementById('ordersContainer');
+  if (!el) return;
+  const FINAL = ['delivered', 'cancelled'];
+
+  function orderCard(o) {
+    const items = parseItems(o.items);
+    const preview = items.slice(0, 3).map(i => `${i.qty || 1}× ${i.name}`).join(', ') + (items.length > 3 ? '…' : '');
+    const clientName = getClientName(o);
+    const clientPhone = o.profiles?.phone || o.customer_phone || '';
+    return `<div class="order-card${o._new ? ' new-order' : ''}">
+      <div class="order-card-head">
+        <div>
+          <div class="order-num">#${o.order_number || o.id.slice(0, 8)}</div>
+          <div class="order-time">${fmtDate(o.created_at)}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          <span class="badge badge-${o.status}">${STATUS_LABELS[o.status] || o.status}</span>
+          <span class="badge ${o.payment_status === 'paid' ? 'badge-paid' : 'badge-cod'}">${o.payment_status === 'paid' ? '💳 Payé' : '💵 Espèces'}</span>
+        </div>
+      </div>
+      <div class="order-items-preview">${preview || '—'}</div>
+      <div class="order-meta">
+        <span>👤 <strong>${clientName}</strong></span>
+        ${clientPhone ? `<span>📞 ${clientPhone}</span>` : ''}
+        <span>💰 <strong>${fmtNum(o.total_amount)} FCFA</strong></span>
+        ${o.delivery_code ? `<span>🔐 Code: <strong style="font-family:'Space Mono';">${o.delivery_code}</strong></span>` : ''}
+      </div>
+      <div class="order-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openOrderDetail('${o.id}')">🔍 Détail</button>
+        ${STATUS_NEXT[o.status] ? `<button class="btn btn-success btn-sm" onclick="advanceOrder('${o.id}','${STATUS_NEXT[o.status]}')">▶ ${STATUS_LABELS[STATUS_NEXT[o.status]]}</button>` : ''}
+        ${o.status === 'ready' ? `<button class="btn btn-gold btn-sm" onclick="openAssignModal('${o.id}')">🛵 Assigner livreur</button>` : ''}
+        ${['pending', 'confirmed'].includes(o.status) ? `<button class="btn btn-danger btn-sm" onclick="cancelOrder('${o.id}')">❌ Annuler</button>` : ''}
+      </div>
+    </div>`;
+  }
+
+  let active, histo = [];
+  if (filteredStatus === 'all') {
+    active = allOrders.filter(o => !FINAL.includes(o.status));
+    histo = allOrders.filter(o => FINAL.includes(o.status));
+  } else {
+    active = allOrders.filter(o => o.status === filteredStatus);
+  }
+
+  if (!active.length && !histo.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>Aucune commande</div>'; return;
+  }
+
+  let html = '';
+  if (active.length) html += active.map(orderCard).join('');
+  else html = '<div class="empty" style="padding:24px;"><div class="empty-icon">✅</div>Aucune commande active</div>';
+
+  if (filteredStatus === 'all' && histo.length) {
+    html += `<div style="margin-top:28px;margin-bottom:12px;display:flex;align-items:center;gap:12px;">
+      <div style="flex:1;height:1px;background:var(--border);"></div>
+      <span style="font-size:.75rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.2px;">📂 Historique — ${histo.length}</span>
+      <div style="flex:1;height:1px;background:var(--border);"></div>
+    </div>`;
+    html += `<div style="opacity:.6;">${histo.map(orderCard).join('')}</div>`;
+  }
+  el.innerHTML = html;
+}
+
+async function advanceOrder(orderId, newStatus) {
+  const { error } = await sb.from('orders').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', orderId);
+  if (error) return toast(error.message, 'error');
+  const o = allOrders.find(x => x.id === orderId);
+  if (o) o.status = newStatus;
+  // BUG FIX: auto-assign quand commande passe à 'ready', sans changer de status à 'picked_up' directement
+  if (newStatus === 'ready') {
+    await autoAssignLivreur(orderId);
+  }
+  renderOrders(); renderDashboard();
+  toast(`Commande → ${STATUS_LABELS[newStatus]}`, 'success');
+}
+
+// BUG FIX: utilise livreur_status pour trouver le livreur le plus récemment en ligne
+async function autoAssignLivreur(orderId) {
+  // Chercher le livreur disponible le plus récemment actif dans livreur_status
+  const { data: statusData } = await sb.from('livreur_status')
+    .select('livreur_id, is_available, updated_at')
+    .eq('is_available', true)
+    .order('updated_at', { ascending: false })
+    .limit(1);
+
+  let livreurId = statusData?.[0]?.livreur_id;
+
+  if (!livreurId) {
+    // Fallback: chercher dans livreur_config
+    await loadLivreurs();
+    const dispo = allLivreurs.find(l => l.livreur_config?.is_available === true);
+    livreurId = dispo?.id || allLivreurs[0]?.id;
+  }
+
+  if (!livreurId) {
+    toast('⚠️ Aucun livreur disponible — assignez manuellement', 'error');
+    return;
+  }
+
+  // Assigner le livreur sans changer le statut (le livreur le fera via son app)
+  const { error } = await sb.from('orders')
+    .update({ livreur_id: livreurId, updated_at: new Date().toISOString() })
+    .eq('id', orderId);
+
+  if (error) { console.warn('Auto-assign error:', error); return; }
+
+  const o = allOrders.find(x => x.id === orderId);
+  if (o) o.livreur_id = livreurId;
+
+  const livreur = allLivreurs.find(l => l.id === livreurId);
+  const livreurName = livreur?.full_name || statusData?.[0]?.livreur_id?.slice(0, 8) || 'Livreur';
+  toast(`🛵 Livreur assigné automatiquement : ${livreurName}`, 'success');
+}
+
+async function cancelOrder(orderId) {
+  if (!confirm('Annuler cette commande ?')) return;
+  const { error } = await sb.from('orders').update({ status: 'cancelled', updated_at: new Date().toISOString() }).eq('id', orderId);
+  if (error) return toast(error.message, 'error');
+  const o = allOrders.find(x => x.id === orderId);
+  if (o) o.status = 'cancelled';
+  renderOrders(); renderDashboard();
+  toast('Commande annulée', 'error');
+}
+
+async function openOrderDetail(orderId) {
+  // Charger l'ordre frais depuis la DB pour avoir les données complètes
+  const { data: freshOrder, error } = await sb.from('orders')
+    .select('*, profiles!orders_client_id_fkey(full_name,phone)')
+    .eq('id', orderId)
+    .single();
+  const o = freshOrder || allOrders.find(x => x.id === orderId);
+  if (!o) return;
+
+  const items = parseItems(o.items);
+  document.getElementById('odTitle').textContent = `Commande #${o.order_number || o.id.slice(0, 8)}`;
+  document.getElementById('odBody').innerHTML = `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;">
+      <span class="badge badge-${o.status}">${STATUS_LABELS[o.status] || o.status}</span>
+      <span class="badge ${o.payment_status === 'paid' ? 'badge-paid' : 'badge-cod'}">${o.payment_status === 'paid' ? '💳 Payé en ligne' : '💰 Paiement à la porte'}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
+      <div><div class="f-label" style="margin-bottom:4px;">Client</div><div style="font-weight:600;">${getClientName(o)}</div><div style="font-size:.8rem;color:var(--text-muted);">${o.profiles?.phone || o.customer_phone || ''}</div></div>
+      <div><div class="f-label" style="margin-bottom:4px;">Adresse</div><div style="font-size:.86rem;">${o.delivery_address || '—'}</div></div>
+      <div><div class="f-label" style="margin-bottom:4px;">Date</div><div style="font-size:.86rem;">${fmtDate(o.created_at)}</div></div>
+      <div><div class="f-label" style="margin-bottom:4px;">Code validation</div><div style="font-family:'Space Mono';font-size:1.2rem;font-weight:700;color:var(--gold);letter-spacing:4px;">${o.delivery_code || '—'}</div></div>
+    </div>
+    <div style="background:var(--card2);border-radius:var(--r-sm);padding:14px;margin-bottom:16px;">
+      <div class="f-label" style="margin-bottom:10px;">Articles commandés</div>
+      ${items.length ? items.map(i => `<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:.87rem;"><span>${i.qty || 1}× ${i.name}</span><span style="font-family:'Space Mono';">${fmtNum((i.qty || 1) * (i.price || 0))} F</span></div>`).join('') : '<div style="color:var(--text-muted);">Aucun article</div>'}
+      <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:.87rem;"><span>Frais de livraison</span><span style="font-family:'Space Mono';">${fmtNum(o.delivery_amount)} F</span></div>
+      <div style="display:flex;justify-content:space-between;padding-top:9px;font-weight:700;border-top:1px solid var(--border2);font-size:1rem;"><span>TOTAL</span><span style="font-family:'Space Mono';color:var(--gold);">${fmtNum(o.total_amount)} FCFA</span></div>
+    </div>
+    ${o.notes ? `<div style="background:var(--card2);border-radius:var(--r-sm);padding:12px;font-size:.85rem;"><span style="color:var(--text-muted);">Note:</span> ${o.notes}</div>` : ''}`;
+  document.getElementById('odFooter').innerHTML = `
+    ${STATUS_NEXT[o.status] ? `<button class="btn btn-success" onclick="advanceOrder('${o.id}','${STATUS_NEXT[o.status]}');closeModal('orderDetailModal')">▶ ${STATUS_LABELS[STATUS_NEXT[o.status]]}</button>` : ''}
+    ${o.status === 'ready' ? `<button class="btn btn-gold" onclick="closeModal('orderDetailModal');openAssignModal('${o.id}')">🛵 Assigner livreur</button>` : ''}
+    <button class="btn btn-ghost" onclick="closeModal('orderDetailModal')">Fermer</button>`;
+  openModal('orderDetailModal');
+}
+
+// ═══════════════════════════════════════════════
+// ASSIGN LIVREUR MANUEL
+// ═══════════════════════════════════════════════
+function openAssignModal(orderId) {
+  assigningOrderId = orderId; selectedLivreurId = null;
+  const el = document.getElementById('livreurList');
+  if (!allLivreurs.length) { el.innerHTML = '<div class="empty">Aucun livreur enregistré</div>'; openModal('assignModal'); return; }
+  el.innerHTML = allLivreurs.map(l => {
+    const status = allLivreurStatus.find(s => s.livreur_id === l.id);
+    const isOnline = status?.is_available === true;
+    const lastSeen = status?.updated_at ? `Vu ${fmtDate(status.updated_at)}` : '';
+    return `<div class="livreur-item" id="litem_${l.id}" onclick="selectLivreur('${l.id}')">
+      <div class="livreur-avatar">${(l.full_name?.charAt(0) || 'L').toUpperCase()}</div>
+      <div class="livreur-info" style="flex:1;">
+        <div class="lname">${l.full_name || 'Livreur'}</div>
+        <div class="lphone">${l.phone || '—'} · ${l.livreur_config?.price_per_km || 1000} FCFA/km</div>
+        ${lastSeen ? `<div style="font-size:.7rem;color:var(--text-dim);">${lastSeen}</div>` : ''}
+      </div>
+      <span class="badge ${isOnline ? 'badge-online' : (l.livreur_config?.is_available !== false ? 'badge-ready' : 'badge-cancelled')}">${isOnline ? '🟢 En ligne' : (l.livreur_config?.is_available !== false ? '✅ Dispo' : '❌ Occupé')}</span>
+    </div>`;
+  }).join('');
+  openModal('assignModal');
+}
+
+function selectLivreur(id) {
+  selectedLivreurId = id;
+  document.querySelectorAll('.livreur-item').forEach(e => e.classList.remove('sel'));
+  document.getElementById('litem_' + id)?.classList.add('sel');
+}
+
+async function confirmAssign() {
+  if (!selectedLivreurId) return toast('Sélectionnez un livreur', 'error');
+  const { error } = await sb.from('orders').update({
+    livreur_id: selectedLivreurId, status: 'picked_up', updated_at: new Date().toISOString()
+  }).eq('id', assigningOrderId);
+  if (error) return toast(error.message, 'error');
+  const o = allOrders.find(x => x.id === assigningOrderId);
+  if (o) { o.livreur_id = selectedLivreurId; o.status = 'picked_up'; }
+  closeModal('assignModal');
+  renderOrders(); renderDashboard();
+  toast('Livreur assigné — commande en route ! 🛵', 'success');
+}
+
+// ═══════════════════════════════════════════════
+// MENU DU JOUR
+// ═══════════════════════════════════════════════
+function renderDailyMenuForm() {
+  const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+  document.getElementById('dmDateLabel').textContent = 'Aujourd\'hui : ' + today;
+  const el = document.getElementById('dmItemsList');
+  if (!allItems.length) { el.innerHTML = '<div style="color:var(--text-muted);padding:10px;">Aucun article — ajoutez des articles d\'abord.</div>'; return; }
+  el.innerHTML = allItems.map(item => {
+    const sel = dmSelections[item.id];
+    return `<div class="dm-item-row">
+      <input type="checkbox" class="toggle" id="dm_${item.id}" ${sel?.selected ? 'checked' : ''} onchange="toggleDmItem('${item.id}',this.checked)">
+      ${item.image_url ? `<img src="${item.image_url}" onerror="this.style.display='none'" alt="">` : `<div class="dm-item-img-ph">${item.categories?.icon || '🍽️'}</div>`}
+      <label for="dm_${item.id}" style="flex:1;cursor:pointer;min-width:120px;">
+        <div style="font-weight:600;">${item.name}</div>
+        <div style="font-size:.75rem;color:var(--text-muted);">Normal : ${fmtNum(item.price)} FCFA</div>
+      </label>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <label style="font-size:.75rem;color:var(--text-muted);">Prix spécial :</label>
+        <input type="number" id="dmprice_${item.id}" class="f-input" style="width:105px;padding:7px 10px;" value="${sel?.special_price || item.price}" ${sel?.selected ? '' : 'disabled'}>
+        <span style="font-size:.75rem;color:var(--text-muted);">FCFA</span>
+      </div>
+    </div>`;
+  }).join('');
+  loadDmHistory();
+}
+
+function toggleDmItem(id, checked) {
+  dmSelections[id] = { selected: checked, special_price: parseInt(document.getElementById(`dmprice_${id}`)?.value) || allItems.find(i => i.id === id)?.price || 0 };
+  const pi = document.getElementById(`dmprice_${id}`);
+  if (pi) pi.disabled = !checked;
+}
+
+async function saveDailyMenu() {
+  const date = document.getElementById('dmDate').value;
+  if (!date) return toast('Sélectionnez une date', 'error');
+  await sb.from('daily_menu').delete().eq('menu_date', date);
+  const toInsert = Object.entries(dmSelections)
+    .filter(([, v]) => v.selected)
+    .map(([id, v]) => ({
+      menu_item_id: id, menu_date: date, is_active: true,
+      special_price: parseInt(document.getElementById(`dmprice_${id}`)?.value) || v.special_price || 0
+    }));
+  if (!toInsert.length) { toast('Sélectionnez au moins un article', 'error'); return; }
+  const { error } = await sb.from('daily_menu').insert(toInsert);
+  if (error) return toast(error.message, 'error');
+  toast(`Menu du ${date} publié (${toInsert.length} articles) ✅`, 'success');
+  loadDmHistory();
+}
+
+async function loadDmHistory() {
+  const { data } = await sb.from('daily_menu').select('*, menu_items(name)').order('menu_date', { ascending: false }).limit(20);
+  const el = document.getElementById('dmHistoryTable');
+  if (!data?.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">📅</div>Aucun menu publié</div>'; return; }
+  const grouped = {};
+  data.forEach(r => { if (!grouped[r.menu_date]) grouped[r.menu_date] = []; grouped[r.menu_date].push(r); });
+  el.innerHTML = `<table class="data-table"><thead><tr><th>Date</th><th>Articles</th><th>Statut</th><th></th></tr></thead><tbody>
+    ${Object.entries(grouped).map(([date, items]) => `<tr>
+      <td><strong>${new Date(date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}</strong></td>
+      <td style="font-size:.82rem;">${items.map(i => i.menu_items?.name || '?').join(', ')}</td>
+      <td><span class="badge badge-ready">✅ Publié</span></td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteDailyMenu('${date}')">Supprimer</button></td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+
+async function deleteDailyMenu(date) {
+  if (!confirm(`Supprimer le menu du ${date} ?`)) return;
+  await sb.from('daily_menu').delete().eq('menu_date', date);
+  toast('Menu supprimé', 'error'); loadDmHistory();
+}
+
+// ═══════════════════════════════════════════════
+// PACKS
+// ═══════════════════════════════════════════════
+function renderPacksGrid() {
+  const el = document.getElementById('packsContainer');
+  if (!allPacks.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🎁</div>Aucun pack créé</div>'; return; }
+  el.innerHTML = `<div class="packs-grid">${allPacks.map(p => `
+    <div class="pack-card-adm">
+      ${p.image_url ? `<img src="${p.image_url}" onerror="this.style.display='none'" alt="">` : `<div class="pack-no-img">🎁</div>`}
+      <div class="pack-info">
+        <div class="pack-name">${p.name}</div>
+        <div style="font-size:.78rem;color:var(--text-muted);margin:4px 0;">${p.description?.slice(0, 60) || ''}</div>
+        <div class="pack-price">${fmtNum(p.price)} FCFA</div>
+        <div style="margin-top:6px;"><span class="badge ${p.is_active ? 'badge-ready' : 'badge-cancelled'}">${p.is_active ? '✅ Actif' : '❌ Inactif'}</span></div>
+        <div class="pack-actions">
+          <button class="btn btn-ghost btn-sm" onclick="openPackModal('${p.id}')">✏️ Modifier</button>
+          <button class="btn btn-ghost btn-sm" onclick="togglePack('${p.id}',${!p.is_active})">${p.is_active ? 'Masquer' : 'Activer'}</button>
+          <button class="btn btn-danger btn-sm" onclick="deletePack('${p.id}')">🗑️</button>
+        </div>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function openPackModal(packId = null) {
+  editingPack = packId ? allPacks.find(p => p.id === packId) : null;
+  document.getElementById('packModalTitle').textContent = editingPack ? 'Modifier le pack' : 'Nouveau pack';
+  document.getElementById('pName').value = editingPack?.name || '';
+  document.getElementById('pDesc').value = editingPack?.description || '';
+  document.getElementById('pItems').value = editingPack?.items_description || '';
+  document.getElementById('pPrice').value = editingPack?.price || '';
+  document.getElementById('pActive').checked = editingPack?.is_active ?? true;
+  const prev = document.getElementById('packImgPreview');
+  if (editingPack?.image_url) { prev.src = editingPack.image_url; prev.style.display = 'block'; }
+  else { prev.src = ''; prev.style.display = 'none'; }
+  document.getElementById('packImgUrl').value = editingPack?.image_url || '';
+  openModal('packModal');
+}
+
+async function savePack() {
+  const payload = {
+    name: document.getElementById('pName').value,
+    description: document.getElementById('pDesc').value,
+    items_description: document.getElementById('pItems').value,
+    price: parseInt(document.getElementById('pPrice').value) || 0,
+    image_url: document.getElementById('packImgUrl').value || null,
+    is_active: document.getElementById('pActive').checked
+  };
+  if (!payload.name) return toast('Nom requis', 'error');
+  let error;
+  if (editingPack) { ({ error } = await sb.from('packs').update(payload).eq('id', editingPack.id)); }
+  else { ({ error } = await sb.from('packs').insert(payload)); }
+  if (error) return toast(error.message, 'error');
+  toast(editingPack ? 'Pack modifié ✅' : 'Pack créé ✅', 'success');
+  closeModal('packModal');
+  await loadPacks(); renderPacksGrid();
+}
+
+async function deletePack(id) {
+  if (!confirm('Supprimer ce pack ?')) return;
+  await sb.from('packs').delete().eq('id', id);
+  toast('Pack supprimé', 'error'); await loadPacks(); renderPacksGrid();
+}
+
+async function togglePack(id, newVal) {
+  await sb.from('packs').update({ is_active: newVal }).eq('id', id);
+  await loadPacks(); renderPacksGrid();
+  toast(newVal ? 'Pack activé ✅' : 'Pack masqué', 'info');
+}
+
+// ═══════════════════════════════════════════════
+// ARTICLES
+// ═══════════════════════════════════════════════
+function renderItemsTable() {
+  const el = document.getElementById('itemsTable');
+  if (!allItems.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🍽️</div>Aucun article</div>'; return; }
+  el.innerHTML = `<table class="data-table"><thead><tr><th>Article</th><th>Catégorie</th><th>Prix</th><th>Disponible</th><th>Actions</th></tr></thead><tbody>
+    ${allItems.map(i => `<tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:10px;">
+          ${i.image_url ? `<img src="${i.image_url}" style="width:42px;height:42px;border-radius:8px;object-fit:cover;" onerror="this.style.display='none'" alt="">` : `<div style="width:42px;height:42px;border-radius:8px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:1.3rem;">${i.categories?.icon || '🍽️'}</div>`}
+          <div><div style="font-weight:600;">${i.name}</div><div style="font-size:.75rem;color:var(--text-muted);">${i.description?.slice(0, 50) || ''}</div></div>
+        </div>
+      </td>
+      <td><span class="badge badge-confirmed">${i.categories?.icon || ''} ${i.categories?.name || '—'}</span></td>
+      <td style="font-family:'Space Mono';font-weight:700;">${fmtNum(i.price)} F</td>
+      <td><input type="checkbox" class="toggle" ${i.is_available ? 'checked' : ''} onchange="toggleItem('${i.id}',this.checked)"></td>
+      <td><div class="actions">
+        <button class="btn btn-ghost btn-sm" onclick="openItemModal('${i.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteItem('${i.id}')">🗑️</button>
+      </div></td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+
+function openItemModal(itemId = null) {
+  editingItem = itemId ? allItems.find(i => i.id === itemId) : null;
+  document.getElementById('itemModalTitle').textContent = editingItem ? 'Modifier l\'article' : 'Nouvel article';
+  document.getElementById('iName').value = editingItem?.name || '';
+  document.getElementById('iDesc').value = editingItem?.description || '';
+  document.getElementById('iPrice').value = editingItem?.price || '';
+  document.getElementById('iAvail').checked = editingItem?.is_available ?? true;
+  const catSel = document.getElementById('iCat');
+  catSel.innerHTML = '<option value="">— Catégorie —</option>' + allCats.map(c => `<option value="${c.id}" ${editingItem?.category_id === c.id ? 'selected' : ''}>${c.icon || ''} ${c.name}</option>`).join('');
+  const prev = document.getElementById('itemImgPreview');
+  if (editingItem?.image_url) { prev.src = editingItem.image_url; prev.style.display = 'block'; }
+  else { prev.src = ''; prev.style.display = 'none'; }
+  document.getElementById('itemImgUrl').value = editingItem?.image_url || '';
+  openModal('itemModal');
+}
+
+async function saveItem() {
+  const payload = {
+    name: document.getElementById('iName').value,
+    description: document.getElementById('iDesc').value,
+    price: parseInt(document.getElementById('iPrice').value) || 0,
+    image_url: document.getElementById('itemImgUrl').value || null,
+    is_available: document.getElementById('iAvail').checked,
+    category_id: document.getElementById('iCat').value || null
+  };
+  if (!payload.name) return toast('Nom requis', 'error');
+  let error;
+  if (editingItem) { ({ error } = await sb.from('menu_items').update(payload).eq('id', editingItem.id)); }
+  else { ({ error } = await sb.from('menu_items').insert(payload)); }
+  if (error) return toast(error.message, 'error');
+  toast(editingItem ? 'Article modifié ✅' : 'Article créé ✅', 'success');
+  closeModal('itemModal');
+  await loadItems(); renderItemsTable(); renderDailyMenuForm();
+}
+
+async function toggleItem(id, val) {
+  await sb.from('menu_items').update({ is_available: val }).eq('id', id);
+  const i = allItems.find(x => x.id === id); if (i) i.is_available = val;
+  toast(val ? 'Article disponible' : 'Article indisponible', 'info');
+}
+
+async function deleteItem(id) {
+  if (!confirm('Supprimer cet article ?')) return;
+  await sb.from('menu_items').delete().eq('id', id);
+  toast('Article supprimé', 'error'); await loadItems(); renderItemsTable(); renderDailyMenuForm();
+}
+
+// ═══════════════════════════════════════════════
+// CATÉGORIES
+// ═══════════════════════════════════════════════
+function renderCatsTable() {
+  const el = document.getElementById('catsTable');
+  if (!allCats.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🏷️</div>Aucune catégorie</div>'; return; }
+  el.innerHTML = `<table class="data-table"><thead><tr><th>Icône</th><th>Nom</th><th>Ordre</th><th>Actions</th></tr></thead><tbody>
+    ${allCats.map(c => `<tr>
+      <td style="font-size:1.4rem;">${c.icon || '—'}</td>
+      <td style="font-weight:600;">${c.name}</td>
+      <td>${c.display_order ?? 0}</td>
+      <td><div class="actions">
+        <button class="btn btn-ghost btn-sm" onclick="openCatModal('${c.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteCat('${c.id}')">🗑️</button>
+      </div></td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+
+function openCatModal(catId = null) {
+  editingCat = catId ? allCats.find(c => c.id === catId) : null;
+  document.getElementById('catModalTitle').textContent = editingCat ? 'Modifier la catégorie' : 'Nouvelle catégorie';
+  document.getElementById('cName').value = editingCat?.name || '';
+  document.getElementById('cIcon').value = editingCat?.icon || '';
+  document.getElementById('cOrder').value = editingCat?.display_order ?? 0;
+  openModal('catModal');
+}
+
+async function saveCat() {
+  const payload = { name: document.getElementById('cName').value, icon: document.getElementById('cIcon').value, display_order: parseInt(document.getElementById('cOrder').value) || 0 };
+  if (!payload.name) return toast('Nom requis', 'error');
+  let error;
+  if (editingCat) { ({ error } = await sb.from('categories').update(payload).eq('id', editingCat.id)); }
+  else { ({ error } = await sb.from('categories').insert(payload)); }
+  if (error) return toast(error.message, 'error');
+  toast('Catégorie enregistrée ✅', 'success');
+  closeModal('catModal'); await loadCategories(); renderCatsTable();
+}
+
+async function deleteCat(id) {
+  if (!confirm('Supprimer cette catégorie ?')) return;
+  await sb.from('categories').delete().eq('id', id);
+  toast('Catégorie supprimée', 'error'); await loadCategories(); renderCatsTable();
+}
+
+// ═══════════════════════════════════════════════
+// ÉVÉNEMENTS
+// ═══════════════════════════════════════════════
+function renderEventsPanel() {
+  const pending = eventRequests.filter(e => e.status === 'pending').length;
+  document.getElementById('eventCount').textContent = pending + ' en attente';
+  // Badge sidebar
+  const eb = document.getElementById('eventBadge');
+  eb.textContent = pending; eb.style.display = pending ? 'inline-block' : 'none';
+
+  const el = document.getElementById('eventsContainer');
+  if (!el) return;
+
+  if (!eventRequests.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🎊</div>Aucune demande d\'événement</div>'; return; }
+
+  const EV_STATUS = { pending: 'badge-pending', quoted: 'badge-confirmed', confirmed: 'badge-ready', cancelled: 'badge-cancelled' };
+  const EV_LABELS = { pending: '⏳ En attente', quoted: '📄 Devis envoyé', confirmed: '✅ Confirmé', cancelled: '❌ Annulé' };
+
+  el.innerHTML = eventRequests.map(ev => `
+    <div class="event-request-card">
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+        <div><div style="font-weight:700;font-size:.95rem;">${ev.contact_name || ev.profiles?.full_name || '—'}</div><div style="font-size:.75rem;color:var(--text-muted);">${fmtDate(ev.created_at)}</div></div>
+        <span class="badge ${EV_STATUS[ev.status] || 'badge-pending'}">${EV_LABELS[ev.status] || ev.status}</span>
+      </div>
+      <div class="event-field"><span class="label">Type :</span><span class="val">🎉 ${ev.event_type || '—'}</span></div>
+      <div class="event-field"><span class="label">Téléphone :</span><span class="val"><a href="tel:${ev.contact_phone}" style="color:var(--gold);">${ev.contact_phone || '—'}</a></span></div>
+      <div class="event-field"><span class="label">Convives :</span><span class="val">${ev.guests || '—'} personnes</span></div>
+      <div class="event-field"><span class="label">Date :</span><span class="val">${ev.event_date ? new Date(ev.event_date).toLocaleDateString('fr-FR') : '—'}</span></div>
+      ${ev.description ? `<div class="event-field" style="flex-direction:column;"><span class="label">Description :</span><span class="val" style="margin-top:4px;">${ev.description}</span></div>` : ''}
+      ${ev.quote_amount ? `<div class="event-field"><span class="label">Devis :</span><span class="val" style="font-family:'Space Mono';font-weight:700;color:var(--gold);">${fmtNum(ev.quote_amount)} FCFA</span></div>` : ''}
+      <div style="display:flex;gap:7px;margin-top:12px;flex-wrap:wrap;">
+        ${ev.status === 'pending' ? `<button class="btn btn-gold btn-sm" onclick="openQuoteModal('${ev.id}')">📄 Envoyer devis</button>` : ''}
+        <button class="btn btn-ghost btn-sm" onclick="window.open('https://wa.me/229${(ev.contact_phone || '').replace(/\s/g, '')}','_blank')">💬 WhatsApp</button>
+        ${ev.status !== 'cancelled' ? `<button class="btn btn-danger btn-sm" onclick="cancelEvent('${ev.id}')">❌ Annuler</button>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+function openQuoteModal(evId) {
+  quotingEventId = evId;
+  const ev = eventRequests.find(e => e.id === evId);
+  document.getElementById('quoteEventInfo').innerHTML = `<strong>${ev.contact_name || '—'}</strong> · ${ev.event_type || '—'} · ${ev.guests || '?'} convives<br><span style="color:var(--text-muted);font-size:.82rem;">${ev.description || ''}</span>`;
+  document.getElementById('quoteAmount').value = '';
+  document.getElementById('quoteMessage').value = '';
+  openModal('quoteModal');
+}
+
+async function submitQuote() {
+  const amount = parseInt(document.getElementById('quoteAmount').value) || 0;
+  if (!amount) return toast('Entrez un montant', 'error');
+  const { error } = await sb.from('event_orders').update({
+    status: 'quoted', quote_amount: amount,
+    quote_message: document.getElementById('quoteMessage').value
+  }).eq('id', quotingEventId);
+  if (error) return toast(error.message, 'error');
+  toast('Devis envoyé ✅', 'success');
+  closeModal('quoteModal');
+  // Update local state
+  const idx = eventRequests.findIndex(e => e.id === quotingEventId);
+  if (idx >= 0) { eventRequests[idx].status = 'quoted'; eventRequests[idx].quote_amount = amount; }
+  renderEventsPanel();
+}
+
+async function cancelEvent(id) {
+  if (!confirm('Annuler cette demande ?')) return;
+  const { error } = await sb.from('event_orders').update({ status: 'cancelled' }).eq('id', id);
+  if (error) return toast(error.message, 'error');
+  const idx = eventRequests.findIndex(e => e.id === id);
+  if (idx >= 0) eventRequests[idx].status = 'cancelled';
+  renderEventsPanel();
+}
+
+// ═══════════════════════════════════════════════
+// CLIENTS PANEL — COMPLET
+// ═══════════════════════════════════════════════
+async function renderClientsPanel() {
+  const el = document.getElementById('clientsPanel');
+  if (!el) return;
+  el.innerHTML = '<div class="empty"><div class="empty-icon">⏳</div>Chargement…</div>';
+  await loadClients();
+  document.getElementById('clientsCount').textContent = `${allClients.length} client(s)`;
+
+  if (!allClients.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">👥</div>Aucun client enregistré</div>'; return;
+  }
+
+  // BUG FIX: utilise client_id (le bon champ) pour compter les commandes
+  const ordersByClient = {};
+  allOrders.forEach(o => {
+    const uid = o.client_id || o.user_id || o.customer_id || o.profile_id;
+    if (uid) { ordersByClient[uid] = (ordersByClient[uid] || 0) + 1; }
+  });
+
+  // Total dépensé par client
+  const spentByClient = {};
+  allOrders.forEach(o => {
+    const uid = o.client_id || o.user_id;
+    if (uid && o.status === 'delivered') {
+      spentByClient[uid] = (spentByClient[uid] || 0) + (o.total_amount || 0);
+    }
+  });
+
+  el.innerHTML = `<table class="data-table">
+    <thead><tr><th>Client</th><th>Téléphone</th><th>Email</th><th>Inscrit le</th><th>Commandes</th><th>Total dépensé</th></tr></thead>
+    <tbody>${allClients.map(c => {
+      const nb = ordersByClient[c.id] || 0;
+      const spent = spentByClient[c.id] || 0;
+      return `<tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="user-avatar" style="width:34px;height:34px;font-size:.82rem;flex-shrink:0;">${(c.full_name?.charAt(0) || 'C').toUpperCase()}</div>
+            <div style="font-weight:600;">${c.full_name || '—'}</div>
+          </div>
+        </td>
+        <td>${c.phone || '—'}</td>
+        <td style="font-size:.82rem;color:var(--text-muted);">${c.email || '—'}</td>
+        <td style="font-size:.82rem;">${c.created_at ? new Date(c.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</td>
+        <td><span class="badge ${nb > 0 ? 'badge-confirmed' : 'badge-cancelled'}">${nb} commande${nb > 1 ? 's' : ''}</span></td>
+        <td style="font-family:'Space Mono';font-size:.82rem;color:${spent > 0 ? 'var(--green)' : 'var(--text-dim)'};">${spent > 0 ? fmtNum(spent) + ' F' : '—'}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+}
+
+// ═══════════════════════════════════════════════
+// LIVREURS PANEL — AVEC STATUT ONLINE
+// ═══════════════════════════════════════════════
+async function renderLivreursPanel() {
+  const el = document.getElementById('livreursPanel');
+  if (!el) return;
+  await loadLivreurs();
+
+  if (!allLivreurs.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">🛵</div>Aucun livreur enregistré<br><small style="color:var(--text-dim);margin-top:8px;display:block;">Les livreurs doivent créer un compte avec le rôle "livreur"</small></div>';
+    return;
+  }
+
+  el.innerHTML = `<table class="data-table"><thead><tr><th>Livreur</th><th>Téléphone</th><th>Prix/km</th><th>Statut config</th><th>En ligne</th><th>Dernière activité</th><th>Livraisons</th></tr></thead><tbody>
+    ${allLivreurs.map(l => {
+      const configAvail = l.livreur_config?.is_available !== false;
+      const lStatus = allLivreurStatus.find(s => s.livreur_id === l.id);
+      const isOnline = lStatus?.is_available === true;
+      const lastSeen = lStatus?.updated_at ? fmtDate(lStatus.updated_at) : '—';
+      const myOrders = allOrders.filter(o => o.livreur_id === l.id && ['picked_up', 'on_the_way'].includes(o.status)).length;
+      return `<tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="livreur-avatar" style="width:36px;height:36px;flex-shrink:0;">${(l.full_name?.charAt(0) || 'L').toUpperCase()}</div>
+            <div><div style="font-weight:600;">${l.full_name || '—'}</div><div style="font-size:.75rem;color:var(--text-muted);">${l.email || '—'}</div></div>
+          </div>
+        </td>
+        <td>${l.phone || '—'}</td>
+        <td style="font-family:'Space Mono';">${l.livreur_config?.price_per_km || 1000} FCFA/km</td>
+        <td><span class="badge ${configAvail ? 'badge-ready' : 'badge-cancelled'}">${configAvail ? '✅ Disponible' : '❌ Occupé'}</span></td>
+        <td><span class="badge ${isOnline ? 'badge-online' : 'badge-offline'}">${isOnline ? '🟢 En ligne' : '⚫ Hors ligne'}</span></td>
+        <td style="font-size:.78rem;color:var(--text-muted);">${lastSeen}</td>
+        <td><span class="badge badge-confirmed">${myOrders} en cours</span></td>
+      </tr>`;
+    }).join('')}
+  </tbody></table>`;
+}
+
+// ═══════════════════════════════════════════════
+// REALTIME — ROBUSTE (corrige le bug de disparition)
+// ═══════════════════════════════════════════════
+let realtimeRetryCount = 0;
+const MAX_RETRY = 10;
+
+function setRealtimeStatus(connected) {
+  realtimeConnected = connected;
+  const dot = document.getElementById('realtimeDot');
+  const label = document.getElementById('realtimeLabel');
+  if (dot) dot.style.background = connected ? 'var(--green)' : 'var(--red)';
+  if (label) label.textContent = connected ? 'Temps réel actif' : 'Reconnexion…';
+}
+
+function subscribeToNewOrders() {
+  if (orderChannel) {
+    try { sb.removeChannel(orderChannel); } catch (e) { }
+    orderChannel = null;
+  }
+
+  orderChannel = sb.channel('vendeur-orders-v2')
+    // ── COMMANDES INSERT ──
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, async payload => {
+      // Vérifier que la commande n'est pas déjà dans allOrders
+      if (allOrders.find(o => o.id === payload.new.id)) return;
+
+      // Fetch la commande complète avec le profil client
+      let order = null;
+      try {
+        const { data: full } = await sb.from('orders')
+          .select('*, profiles!orders_client_id_fkey(full_name,phone)')
+          .eq('id', payload.new.id)
+          .single();
+        order = full;
+      } catch (e) { }
+
+      // Fallback si le fetch échoue
+      if (!order) {
+        try {
+          const { data: simple } = await sb.from('orders').select('*').eq('id', payload.new.id).single();
+          order = simple;
+        } catch (e) { }
+      }
+
+      if (!order) order = { ...payload.new };
+      order._new = true;
+
+      // Ajout sécurisé sans doublon
+      if (!allOrders.find(o => o.id === order.id)) {
+        allOrders.unshift(order);
+      }
+
+      addNotification(`🆕 Nouvelle commande #${order.order_number || order.id.slice(0, 8)}`, 'order', order.id);
+      renderDashboard();
+      renderOrders();
+    })
+
+    // ── COMMANDES UPDATE ──
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, payload => {
+      const idx = allOrders.findIndex(o => o.id === payload.new.id);
+      if (idx >= 0) {
+        // Préserver les données join (profiles) — ne mettre à jour que les champs scalaires
+        allOrders[idx] = { ...allOrders[idx], ...payload.new, profiles: allOrders[idx].profiles };
+      } else {
+        // Nouvelle commande pas encore dans notre liste (rare)
+        allOrders.unshift({ ...payload.new, _new: true });
+      }
+      renderDashboard();
+      renderOrders();
+    })
+
+    // ── ÉVÉNEMENTS INSERT ──
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'event_orders' }, async payload => {
+      if (eventRequests.find(e => e.id === payload.new.id)) return;
+
+      let ev = { ...payload.new };
+      try {
+        const { data: full } = await sb.from('event_orders')
+          .select('*, profiles!event_orders_client_id_fkey(full_name)')
+          .eq('id', payload.new.id)
+          .single();
+        if (full) ev = full;
+      } catch (e) { }
+
+      eventRequests.unshift(ev);
+      addNotification(`🎊 Nouvelle demande événement — ${ev.contact_name || 'Client'}`, 'event', ev.id);
+      renderEventsPanel();
+    })
+
+    // ── ÉVÉNEMENTS UPDATE ──
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'event_orders' }, payload => {
+      const idx = eventRequests.findIndex(e => e.id === payload.new.id);
+      if (idx >= 0) {
+        eventRequests[idx] = { ...eventRequests[idx], ...payload.new };
+      } else {
+        eventRequests.unshift({ ...payload.new });
+      }
+      renderEventsPanel();
+    })
+
+    // ── LIVREUR STATUS UPDATE ──
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'livreur_status' }, payload => {
+      const idx = allLivreurStatus.findIndex(s => s.livreur_id === payload.new.livreur_id);
+      if (idx >= 0) {
+        allLivreurStatus[idx] = { ...allLivreurStatus[idx], ...payload.new };
+      } else {
+        allLivreurStatus.push(payload.new);
+      }
+      renderDashLivreurs();
+    })
+
+    .subscribe(status => {
+      if (status === 'SUBSCRIBED') {
+        setRealtimeStatus(true);
+        realtimeRetryCount = 0;
+        console.log('✅ Realtime connecté');
+      }
+      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+        setRealtimeStatus(false);
+        console.warn(`⚠️ Realtime ${status}`);
+        if (realtimeRetryCount < MAX_RETRY) {
+          realtimeRetryCount++;
+          const delay = Math.min(1000 * Math.pow(2, realtimeRetryCount), 30000); // backoff exponentiel
+          console.log(`Reconnexion dans ${delay / 1000}s (tentative ${realtimeRetryCount})`);
+          setTimeout(subscribeToNewOrders, delay);
+        } else {
+          console.error('Realtime: nombre max de reconnexions atteint');
+          toast('⚠️ Connexion temps réel perdue. Rechargez la page.', 'error');
+        }
+      }
+    });
+}
+
+// ═══════════════════════════════════════════════
+// NOTIFICATIONS
+// ═══════════════════════════════════════════════
+function addNotification(msg, type, refId = null) {
+  notifications.unshift({ msg, type, refId, time: new Date(), read: false });
+  const dot = document.getElementById('notifDot');
+  if (dot) dot.style.display = 'block';
+  renderNotifList();
+  toast(msg, 'info');
+  try {
+    if (Notification.permission === 'granted') new Notification('Ablô Tchigan', { body: msg });
+  } catch (e) { }
+}
+
+function renderNotifList() {
+  const el = document.getElementById('notifList');
+  if (!el) return;
+  if (!notifications.length) { el.innerHTML = '<div class="empty" style="padding:30px;"><div class="empty-icon">🔔</div>Aucune notification</div>'; return; }
+  el.innerHTML = notifications.slice(0, 20).map(n => `
+    <div class="notif-item ${n.read ? '' : 'unread'}">
+      <div style="font-size:.85rem;">${n.msg}</div>
+      <div class="notif-time">${fmtDate(n.time)}</div>
+    </div>`).join('');
+}
+
+function clearNotifs() {
+  notifications.forEach(n => n.read = true);
+  const dot = document.getElementById('notifDot');
+  if (dot) dot.style.display = 'none';
+  renderNotifList();
+}
+
+document.addEventListener('click', e => {
+  const panel = document.getElementById('notifPanel');
+  const btn = document.querySelector('.notif-btn');
+  if (panel?.classList.contains('open') && !panel.contains(e.target) && btn && !btn.contains(e.target)) {
+    panel.classList.remove('open');
+  }
+});
+
+// ═══════════════════════════════════════════════
+// POLLING DE SECOURS (30s) — robuste
+// ═══════════════════════════════════════════════
+function startPolling() {
+  setInterval(async () => {
+    try {
+      // Recharge orders — protection intégrée dans loadOrders()
+      await loadOrders();
+      // Recharge events — protection intégrée dans loadEvents()
+      await loadEvents();
+      // Met à jour les renders
+      renderDashboard();
+      // Ne re-render orders/events que si les panels sont visibles
+      const activePanel = document.querySelector('.panel.active');
+      if (activePanel?.id === 'panel-orders') renderOrders();
+      if (activePanel?.id === 'panel-events') renderEventsPanel();
+      if (activePanel?.id === 'panel-dashboard') renderDashLivreurs();
+    } catch (err) {
+      console.warn('Polling error:', err);
+    }
+  }, 30000);
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+window.addEventListener('load', async () => {
+  updateTopbarDate();
+  setInterval(updateTopbarDate, 60000);
+
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) await initApp();
+
+  startPolling();
+});
+</script>
+</body>
+</html>
