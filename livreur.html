@@ -789,6 +789,164 @@ body{
 }
 
 /* ═══════════════════════════════════════════
+   TARIF PAR KM
+═══════════════════════════════════════════ */
+.tarif-section{margin:0 12px 12px;}
+
+.tarif-card{
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-radius:var(--r);
+  overflow:hidden;
+  position:relative;
+}
+.tarif-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg, var(--amber), var(--amber-d));
+}
+
+.tarif-head{
+  padding:16px 16px 12px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.tarif-head-left{display:flex;align-items:center;gap:10px;}
+.tarif-icon{
+  width:36px;height:36px;border-radius:10px;
+  background:var(--amber-glow);
+  border:1px solid rgba(245,158,11,.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;
+}
+.tarif-title{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:1rem;font-weight:800;letter-spacing:.4px;
+  color:var(--text);line-height:1.1;
+}
+.tarif-subtitle{font-size:.72rem;color:var(--text-3);margin-top:2px;}
+
+.tarif-display{
+  text-align:right;
+}
+.tarif-val{
+  font-family:'JetBrains Mono',monospace;
+  font-size:1.6rem;font-weight:800;color:var(--amber);
+  line-height:1;
+}
+.tarif-unit{font-size:.7rem;color:var(--text-3);margin-top:2px;}
+
+.tarif-body{padding:0 16px 16px;}
+
+/* Slider */
+.tarif-slider-wrap{margin-bottom:14px;position:relative;}
+.tarif-slider{
+  width:100%;
+  -webkit-appearance:none;appearance:none;
+  height:6px;border-radius:3px;
+  background:var(--surface3);
+  outline:none;cursor:pointer;
+  /* filled portion via JS */
+}
+.tarif-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:26px;height:26px;border-radius:50%;
+  background:linear-gradient(135deg,var(--amber),var(--amber-d));
+  box-shadow:0 2px 10px rgba(245,158,11,.4);
+  cursor:pointer;border:3px solid var(--bg);
+  transition:transform .15s;
+}
+.tarif-slider::-webkit-slider-thumb:active{transform:scale(1.2);}
+.tarif-slider::-moz-range-thumb{
+  width:26px;height:26px;border-radius:50%;
+  background:linear-gradient(135deg,var(--amber),var(--amber-d));
+  box-shadow:0 2px 10px rgba(245,158,11,.4);
+  cursor:pointer;border:3px solid var(--bg);
+}
+.tarif-range-labels{
+  display:flex;justify-content:space-between;
+  margin-top:6px;font-size:.65rem;color:var(--text-3);
+  font-family:'JetBrains Mono',monospace;
+}
+
+/* Quick preset chips */
+.tarif-presets{
+  display:flex;gap:6px;flex-wrap:wrap;
+  margin-bottom:14px;
+}
+.tarif-preset{
+  flex:1;min-width:0;
+  border:1.5px solid var(--border2);
+  background:var(--surface2);
+  color:var(--text-2);
+  font-family:'JetBrains Mono',monospace;
+  font-size:.78rem;font-weight:700;
+  padding:8px 4px;border-radius:var(--r-xs);
+  cursor:pointer;text-align:center;
+  transition:all .15s;white-space:nowrap;
+}
+.tarif-preset:hover{border-color:rgba(245,158,11,.4);color:var(--amber);}
+.tarif-preset.active{
+  border-color:var(--amber);
+  background:var(--amber-glow);
+  color:var(--amber);
+}
+
+/* Custom input row */
+.tarif-custom-row{
+  display:flex;gap:8px;align-items:center;
+  margin-bottom:14px;
+}
+.tarif-custom-label{
+  font-size:.72rem;color:var(--text-3);
+  flex-shrink:0;white-space:nowrap;
+}
+.tarif-input-wrap{
+  flex:1;position:relative;display:flex;align-items:center;
+}
+.tarif-input{
+  width:100%;
+  background:var(--bg2);
+  border:1.5px solid var(--border2);
+  border-radius:var(--r-xs);
+  padding:10px 50px 10px 12px;
+  color:var(--text);
+  font-family:'JetBrains Mono',monospace;
+  font-size:1rem;font-weight:700;
+  transition:border-color .2s,box-shadow .2s;
+  -webkit-appearance:none;appearance:none;
+}
+.tarif-input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 3px var(--amber-glow);}
+.tarif-input-unit{
+  position:absolute;right:10px;
+  font-size:.72rem;color:var(--text-3);
+  font-family:'DM Sans',sans-serif;font-weight:600;
+  pointer-events:none;
+}
+
+/* Save button */
+.btn-save-tarif{
+  width:100%;border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--amber),var(--amber-d));
+  color:var(--text-inv);
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:1.05rem;font-weight:800;letter-spacing:.8px;
+  padding:13px;border-radius:var(--r-xs);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 4px 16px rgba(245,158,11,.25);
+  transition:all .2s;
+}
+.btn-save-tarif:hover{box-shadow:0 6px 24px rgba(245,158,11,.4);transform:translateY(-1px);}
+.btn-save-tarif:active{transform:scale(.98);}
+.btn-save-tarif:disabled{opacity:.5;transform:none;cursor:not-allowed;}
+.tarif-saved-badge{
+  display:none;align-items:center;gap:6px;
+  font-size:.78rem;color:var(--emerald);font-weight:600;
+  margin-top:8px;justify-content:center;
+  animation:fadeIn .3s ease;
+}
+.tarif-saved-badge.show{display:flex;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ═══════════════════════════════════════════
    ORDERS LIST PADDING CONSISTENCY
 ═══════════════════════════════════════════ */
 .orders-list{padding:0 12px;}
@@ -930,7 +1088,7 @@ body{
         </div>
 
         <div class="stats-section">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:.8rem;font-weight:700;letter-spacing:1px;color:var(--text-3);margin-bottom:10px;padding:4px 0;">STATISTIQUES</div>
+          <div class="profile-section-label">STATISTIQUES</div>
           <div class="stats-grid2">
             <div class="sg-card"><div class="sg-val" id="sgToday">—</div><div class="sg-lbl">Auj.</div></div>
             <div class="sg-card"><div class="sg-val" id="sgMonth">—</div><div class="sg-lbl">Ce mois</div></div>
@@ -944,6 +1102,78 @@ body{
             <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;">
               <span style="font-size:.84rem;color:var(--text-2);">Revenus ce mois</span>
               <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--amber);" id="earnMonth">— FCFA</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── TARIF PAR KM ── -->
+        <div class="tarif-section">
+          <div class="profile-section-label" style="padding:0 0 10px;">TARIFICATION</div>
+          <div class="tarif-card">
+            <div class="tarif-head">
+              <div class="tarif-head-left">
+                <div class="tarif-icon">⚡</div>
+                <div>
+                  <div class="tarif-title">Tarif par kilomètre</div>
+                  <div class="tarif-subtitle">Appliqué à chaque livraison</div>
+                </div>
+              </div>
+              <div class="tarif-display">
+                <div class="tarif-val" id="tarifDisplay">150</div>
+                <div class="tarif-unit">FCFA / km</div>
+              </div>
+            </div>
+
+            <div class="tarif-body">
+              <!-- Slider -->
+              <div class="tarif-slider-wrap">
+                <input
+                  type="range"
+                  class="tarif-slider"
+                  id="tarifSlider"
+                  min="50" max="500" step="5" value="150"
+                  oninput="onTarifSlider(this.value)"
+                >
+                <div class="tarif-range-labels">
+                  <span>50</span>
+                  <span>150</span>
+                  <span>300</span>
+                  <span>500</span>
+                </div>
+              </div>
+
+              <!-- Presets -->
+              <div class="tarif-presets" id="tarifPresets">
+                <button class="tarif-preset" onclick="setTarif(75)">75</button>
+                <button class="tarif-preset" onclick="setTarif(100)">100</button>
+                <button class="tarif-preset active" onclick="setTarif(150)">150</button>
+                <button class="tarif-preset" onclick="setTarif(200)">200</button>
+                <button class="tarif-preset" onclick="setTarif(300)">300</button>
+              </div>
+
+              <!-- Custom input -->
+              <div class="tarif-custom-row">
+                <span class="tarif-custom-label">Valeur libre :</span>
+                <div class="tarif-input-wrap">
+                  <input
+                    type="number"
+                    class="tarif-input"
+                    id="tarifInput"
+                    min="10" max="9999" step="5" value="150"
+                    inputmode="numeric"
+                    oninput="onTarifInput(this.value)"
+                  >
+                  <span class="tarif-input-unit">FCFA/km</span>
+                </div>
+              </div>
+
+              <!-- Save -->
+              <button class="btn-save-tarif" id="btnSaveTarif" onclick="saveTarif()">
+                💾 Enregistrer le tarif
+              </button>
+              <div class="tarif-saved-badge" id="tarifSavedBadge">
+                ✓ Tarif mis à jour avec succès
+              </div>
             </div>
           </div>
         </div>
@@ -1069,6 +1299,82 @@ async function doLogin() {
 }
 
 // ═══════════════════════════════════════════════════════
+// TARIF PAR KM
+// ═══════════════════════════════════════════════════════
+let currentTarif = 150; // default FCFA/km
+const PRESETS = [75, 100, 150, 200, 300];
+
+async function loadTarif() {
+  const { data } = await sb.from('livreur_status')
+    .select('price_per_km')
+    .eq('livreur_id', currentUser.id)
+    .maybeSingle();
+  if (data?.price_per_km) {
+    currentTarif = data.price_per_km;
+  }
+  syncTarifUI(currentTarif);
+}
+
+function syncTarifUI(val) {
+  val = Math.min(9999, Math.max(10, parseInt(val) || 150));
+  currentTarif = val;
+
+  // Display
+  document.getElementById('tarifDisplay').textContent = val;
+
+  // Slider (clamp to slider range)
+  const slider = document.getElementById('tarifSlider');
+  slider.value = Math.min(500, Math.max(50, val));
+  updateSliderTrack(slider);
+
+  // Number input
+  document.getElementById('tarifInput').value = val;
+
+  // Preset chips highlight
+  document.querySelectorAll('.tarif-preset').forEach((btn, i) => {
+    btn.classList.toggle('active', PRESETS[i] === val);
+  });
+
+  // Hide saved badge on any change
+  document.getElementById('tarifSavedBadge').classList.remove('show');
+}
+
+function updateSliderTrack(slider) {
+  const min = +slider.min, max = +slider.max, val = +slider.value;
+  const pct = ((val - min) / (max - min)) * 100;
+  slider.style.background = `linear-gradient(to right, var(--amber) ${pct}%, var(--surface3) ${pct}%)`;
+}
+
+function onTarifSlider(val) { syncTarifUI(val); }
+function onTarifInput(val)  { syncTarifUI(val); }
+function setTarif(val)      { syncTarifUI(val); }
+
+async function saveTarif() {
+  const btn = document.getElementById('btnSaveTarif');
+  btn.disabled = true;
+  btn.textContent = '⏳ Enregistrement…';
+
+  try {
+    const { error } = await sb.from('livreur_status').upsert({
+      livreur_id: currentUser.id,
+      price_per_km: currentTarif,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'livreur_id' });
+
+    if (error) throw error;
+
+    // Success feedback
+    document.getElementById('tarifSavedBadge').classList.add('show');
+    toast(`✅ Tarif mis à jour : ${currentTarif} FCFA/km`, 'success');
+  } catch(e) {
+    toast('❌ Erreur : ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '💾 Enregistrer le tarif';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
 // BOOT APP
 // ═══════════════════════════════════════════════════════
 async function bootApp() {
@@ -1088,8 +1394,11 @@ async function bootApp() {
   if (st) { isAvailable = !!st.is_available; syncToggleUI(); }
 
   // Load data
-  await Promise.all([loadActiveOrders(), loadDeliveredOrders()]);
+  await Promise.all([loadActiveOrders(), loadDeliveredOrders(), loadTarif()]);
   render();
+  // Init slider track gradient
+  const sl = document.getElementById('tarifSlider');
+  if (sl) updateSliderTrack(sl);
   // BUG FIX: only start GPS tracking if livreur is currently available
   if (isAvailable) startGPS();
   subscribeRealtime();
