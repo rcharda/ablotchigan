@@ -45,24 +45,79 @@
   --r:18px;--r-sm:12px;--r-xs:8px;
   --shadow:0 8px 32px rgba(0,0,0,.6);
   --shadow-amber:0 8px 32px rgba(245,158,11,.2);
+
+  /* nav height exposed as variable for correct flex calc */
+  --nav-h:56px;
 }
-html,body{height:100%;overflow:hidden;}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+html{height:100%;}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--bg);color:var(--text);
+  height:100%;overflow:hidden;
+  /* Desktop: center the app */
+  display:flex;align-items:stretch;justify-content:center;
+}
 
 /* ═══════════════════════════════════════════
-   SCROLLABLE AREA
+   DESKTOP WRAPPER
 ═══════════════════════════════════════════ */
-.scroll-area{overflow-y:auto;height:calc(100vh - 130px);padding-bottom:24px;-webkit-overflow-scrolling:touch;}
+/* On desktop, the app sits in a centered column */
+@media(min-width:768px){
+  body{
+    background:#04060D;
+    align-items:center;
+    padding:0;
+  }
+  body::before{
+    content:'';position:fixed;inset:0;
+    background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(245,158,11,.06) 0%, transparent 70%);
+    pointer-events:none;
+  }
+  #loginScreen{
+    position:relative;
+    width:440px;
+    height:100vh;
+    border-radius:0;
+    box-shadow:none;
+  }
+  #app{
+    width:440px;
+    max-width:440px;
+    height:100vh;
+    border-radius:0;
+    box-shadow:0 0 80px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.04);
+  }
+}
+@media(min-width:1024px){
+  #loginScreen{ width:460px; border-radius:24px; height:auto; max-height:90vh; }
+  #app{ width:460px; height:90vh; border-radius:24px; overflow:hidden; }
+  body{ align-items:center; }
+}
+
+/* ═══════════════════════════════════════════
+   SCROLLABLE AREA — flex:1 approach (no hardcoded heights)
+═══════════════════════════════════════════ */
+.scroll-area{
+  flex:1;
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding-bottom:16px;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+}
 .scroll-area::-webkit-scrollbar{width:0;}
 
 /* ═══════════════════════════════════════════
    LOGIN
 ═══════════════════════════════════════════ */
 #loginScreen{
+  /* Mobile: full screen fixed overlay */
   position:fixed;inset:0;z-index:9999;
   background:var(--bg);
-  display:flex;align-items:center;justify-content:center;padding:24px;
-  overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;padding-top:max(24px, env(safe-area-inset-top));
+  overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
 }
 .login-bg{
   position:absolute;inset:0;overflow:hidden;
@@ -175,17 +230,27 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 /* ═══════════════════════════════════════════
    APP
 ═══════════════════════════════════════════ */
-#app{display:none;height:100vh;flex-direction:column;}
+#app{
+  display:none;
+  width:100%;
+  height:100%;
+  flex-direction:column;
+  /* Contain everything, no overflow leak */
+  overflow:hidden;
+}
 #app.show{display:flex;}
 
 /* TOPBAR */
 .topbar{
   background:var(--surface);
   border-bottom:1px solid var(--border);
-  padding:0 18px;
-  height:64px;flex-shrink:0;
+  padding:0 16px;
+  padding-top:env(safe-area-inset-top, 0);
+  height:calc(64px + env(safe-area-inset-top, 0px));
+  flex-shrink:0;
   display:flex;align-items:center;justify-content:space-between;
   position:relative;z-index:100;
+  gap:8px;
 }
 .tb-brand{display:flex;align-items:center;gap:10px;}
 .tb-icon{
@@ -219,19 +284,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 /* ═══════════════════════════════════════════
    PANELS
 ═══════════════════════════════════════════ */
-.panels{flex:1;overflow:hidden;position:relative;}
-.panel{position:absolute;inset:0;display:none;flex-direction:column;}
+.panels{flex:1;overflow:hidden;position:relative;min-height:0;}
+.panel{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden;}
 .panel.active{display:flex;}
 
 /* ═══════════════════════════════════════════
    STATUS HERO CARD
 ═══════════════════════════════════════════ */
 .status-hero{
-  margin:14px 14px 0;
+  margin:12px 12px 0;
   background:var(--surface);
   border:1px solid var(--border2);
   border-radius:var(--r);
-  padding:18px 20px;
+  padding:16px 18px;
   position:relative;overflow:hidden;
   flex-shrink:0;
 }
@@ -259,30 +324,27 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .sh-status-text.online{color:var(--emerald);}
 .sh-sub{font-size:.75rem;color:var(--text-3);margin-top:3px;}
 
-/* TOGGLE */
+/* TOGGLE — unified approach using ts-* classes */
 .toggle-switch{
   position:relative;width:52px;height:28px;flex-shrink:0;cursor:pointer;
 }
 .toggle-switch input{opacity:0;width:0;height:0;position:absolute;}
-.toggle-track{
+/* ts-* classes are the actual used ones in the HTML */
+.ts-track{
   position:absolute;inset:0;background:var(--surface3);
-  border-radius:14px;transition:background .3s;
+  border-radius:14px;transition:background .3s, border-color .3s;
   border:1.5px solid var(--border2);
 }
-.toggle-switch input:checked ~ .toggle-track{background:var(--emerald);border-color:var(--emerald);}
-.toggle-thumb{
+.ts-thumb{
   position:absolute;width:20px;height:20px;border-radius:50%;
-  background:white;top:4px;left:4px;
+  background:white;top:3px;left:3px;
   transition:left .25s cubic-bezier(.34,1.56,.64,1);
   box-shadow:0 2px 6px rgba(0,0,0,.4);
+  pointer-events:none;z-index:1;
 }
-.toggle-switch input:checked ~ .toggle-track ~ .toggle-thumb,
-.toggle-switch input:checked + .toggle-track + .toggle-thumb{left:28px;}
-/* simpler approach */
+/* CSS-driven toggle state (backup if JS inline style not set) */
 .ts-input:checked ~ .ts-track{background:var(--emerald);border-color:var(--emerald);}
-.ts-input:checked ~ .ts-thumb{left:28px;}
-.ts-track{position:absolute;inset:0;background:var(--surface3);border-radius:14px;transition:background .3s;border:1.5px solid var(--border2);}
-.ts-thumb{position:absolute;width:20px;height:20px;border-radius:50%;background:white;top:3px;left:3px;transition:left .25s cubic-bezier(.34,1.56,.64,1);box-shadow:0 2px 6px rgba(0,0,0,.4);pointer-events:none;z-index:1;}
+.ts-input:checked ~ .ts-track ~ .ts-thumb{left:28px;}
 
 .sh-bottom{display:flex;gap:10px;}
 .sh-stat{
@@ -300,7 +362,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
    SECTION HEADER
 ═══════════════════════════════════════════ */
 .sec-head{
-  padding:16px 14px 10px;
+  padding:14px 12px 8px;
   display:flex;align-items:center;justify-content:space-between;
   flex-shrink:0;
 }
@@ -401,10 +463,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 /* ACTION BUTTONS */
 .action-row{display:flex;gap:8px;flex-wrap:wrap;}
 .act-btn{
-  flex:1;min-width:120px;border:none;cursor:pointer;
+  flex:1;min-width:100px;border:none;cursor:pointer;
   font-family:'Barlow Condensed',sans-serif;
-  font-size:1rem;font-weight:700;letter-spacing:.5px;
-  border-radius:var(--r-sm);padding:12px 14px;
+  font-size:.95rem;font-weight:700;letter-spacing:.5px;
+  border-radius:var(--r-sm);padding:12px 12px;
   display:flex;align-items:center;justify-content:center;gap:6px;
   transition:all .2s;
 }
@@ -491,7 +553,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
    PROFILE
 ═══════════════════════════════════════════ */
 .profile-hero{
-  margin:14px 14px 0;
+  margin:12px 12px 0;
   background:linear-gradient(135deg,var(--surface) 0%,var(--surface2) 100%);
   border:1px solid var(--border2);border-radius:var(--r);
   padding:24px 20px;
@@ -518,7 +580,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   font-size:.72rem;font-weight:700;color:var(--amber);margin-top:10px;
 }
 
-.stats-section{margin:12px 14px 0;}
+.stats-section{margin:12px 12px 0;}
 .stats-grid2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;}
 .sg-card{
   background:var(--surface);border:1px solid var(--border);
@@ -527,7 +589,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .sg-val{font-family:'JetBrains Mono',monospace;font-size:1.3rem;font-weight:700;color:var(--amber);}
 .sg-lbl{font-size:.65rem;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--text-3);margin-top:4px;}
 
-.danger-zone{margin:0 14px 14px;}
+.danger-zone{margin:0 12px 20px;}
 .btn-logout{
   width:100%;border:1.5px solid rgba(244,63,94,.3);cursor:pointer;
   background:var(--rose-glow);color:var(--rose);
@@ -545,7 +607,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   background:var(--surface);
   border-top:1px solid var(--border);
   display:flex;flex-shrink:0;
-  padding-bottom:env(safe-area-inset-bottom, 0);
+  /* Safe area for iPhone home indicator */
+  padding-bottom:env(safe-area-inset-bottom, 0px);
   position:relative;z-index:100;
 }
 .nav-item{
@@ -553,7 +616,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   justify-content:center;padding:10px 4px 9px;cursor:pointer;
   color:var(--text-3);gap:3px;position:relative;
   transition:color .15s;
-  font-size:.67rem;font-weight:600;letter-spacing:.4px;text-transform:uppercase;
+  font-size:.65rem;font-weight:600;letter-spacing:.4px;text-transform:uppercase;
+  /* Prevent text selection on tap */
+  user-select:none;-webkit-user-select:none;
+  /* Minimum touch target */
+  min-height:56px;
 }
 .nav-item.active{color:var(--amber);}
 .nav-item::after{
@@ -574,7 +641,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
    TOAST
 ═══════════════════════════════════════════ */
 #toastBox{
-  position:fixed;top:14px;left:14px;right:14px;
+  position:fixed;
+  top:max(14px, env(safe-area-inset-top, 14px));
+  left:14px;right:14px;
   z-index:99999;display:flex;flex-direction:column;gap:8px;
   pointer-events:none;
 }
@@ -595,6 +664,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .toast-close{opacity:.4;cursor:pointer;font-size:.8rem;flex-shrink:0;padding:2px;}
 @keyframes toastIn{from{opacity:0;transform:translateY(-12px) scale(.95)}to{opacity:1;transform:none}}
 
+@media(min-width:500px){
+  #toastBox{left:auto;width:320px;right:14px;}
+}
+
 /* ═══════════════════════════════════════════
    MODAL (MAP)
 ═══════════════════════════════════════════ */
@@ -608,15 +681,29 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   background:var(--surface);border:1px solid var(--border2);
   border-radius:var(--r) var(--r) 0 0;
   width:100%;max-height:90vh;overflow-y:auto;
-  padding:20px;animation:modalUp .3s cubic-bezier(.34,1.2,.64,1);
+  padding:20px;
+  padding-bottom:max(20px, calc(env(safe-area-inset-bottom, 0px) + 20px));
+  animation:modalUp .3s cubic-bezier(.34,1.2,.64,1);
 }
 @keyframes modalUp{from{transform:translateY(100%)}to{transform:none}}
 .modal-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 18px;}
 .modal-title{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:.3px;margin-bottom:14px;}
 
-@media(min-width:500px){
-  #toastBox{left:auto;width:320px;right:14px;}
+/* Desktop modal: centered card instead of bottom sheet */
+@media(min-width:768px){
+  .modal-bg{align-items:center;justify-content:center;padding:24px;}
+  .modal{
+    border-radius:var(--r);
+    max-width:420px;
+    max-height:80vh;
+  }
+  @keyframes modalUp{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
 }
+
+/* ═══════════════════════════════════════════
+   ORDERS LIST PADDING CONSISTENCY
+═══════════════════════════════════════════ */
+.orders-list{padding:0 12px;}
 </style>
 </head>
 <body>
@@ -727,7 +814,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <button class="sec-action" onclick="refreshAll()">↻ Actualiser</button>
       </div>
 
-      <div class="scroll-area" style="height:calc(100vh - 64px - 178px - 52px - 50px);">
+      <div class="scroll-area">
         <div class="orders-list" id="activeOrdersList"></div>
       </div>
 
@@ -738,14 +825,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <div class="sec-head">
         <div class="sec-title">📋 HISTORIQUE</div>
       </div>
-      <div class="scroll-area" style="height:calc(100vh - 64px - 52px - 50px);">
-        <div style="padding:0 14px;" id="historyList"></div>
+      <div class="scroll-area">
+        <div style="padding:0 12px;" id="historyList"></div>
       </div>
     </div>
 
     <!-- ── PROFIL ── -->
     <div class="panel" id="panel-profile">
-      <div class="scroll-area" style="height:calc(100vh - 64px - 52px);">
+      <div class="scroll-area">
 
         <div class="profile-hero">
           <div class="ph-avatar" id="phAvatar">L</div>
@@ -915,7 +1002,8 @@ async function bootApp() {
   // Load data
   await Promise.all([loadActiveOrders(), loadDeliveredOrders()]);
   render();
-  startGPS();
+  // BUG FIX: only start GPS tracking if livreur is currently available
+  if (isAvailable) startGPS();
   subscribeRealtime();
   requestNotifPermission();
   startPolling();
@@ -1138,6 +1226,7 @@ async function confirmDelivery(orderId) {
   }
   toast('🎉 Livraison confirmée ! Félicitations !', 'success');
   sendNotification('Livraison confirmée !', 'Bravo pour cette livraison réussie 🎉');
+  // Show history panel to reflect the completed delivery
   render();
 }
 
@@ -1152,9 +1241,12 @@ function openMap(addr) {
   setTimeout(() => {
     const el = document.getElementById('modalMapEl');
     el.innerHTML = '';
-    if (leafletModal) { leafletModal.remove(); leafletModal = null; }
+    // BUG FIX: properly destroy previous map instance before creating new one
+    if (leafletModal) { try { leafletModal.remove(); } catch(e){} leafletModal = null; }
     const map = L.map('modalMapEl').setView([6.3654, 2.4183], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+      attribution:'© OpenStreetMap'
+    }).addTo(map);
     if (lastLat && lastLng) {
       L.marker([lastLat, lastLng], {
         icon: L.divIcon({
@@ -1162,11 +1254,16 @@ function openMap(addr) {
           iconSize:[34,34],iconAnchor:[17,17]
         })
       }).addTo(map).bindPopup('Ma position').openPopup();
+      map.setView([lastLat, lastLng], 14);
     }
     leafletModal = map;
   }, 250);
 }
-function closeMapModal() { document.getElementById('mapModal').classList.remove('open'); }
+function closeMapModal() {
+  document.getElementById('mapModal').classList.remove('open');
+  // BUG FIX: invalidate map size after modal hides to prevent grey tile issues on re-open
+  if (leafletModal) { setTimeout(() => { try { leafletModal.invalidateSize(); } catch(e){} }, 100); }
+}
 
 // ═══════════════════════════════════════════════════════
 // AVAILABILITY
@@ -1344,7 +1441,13 @@ window.addEventListener('load', async () => {
     const { data: { user } } = await sb.auth.getUser();
     if (user) {
       const { data: prof } = await sb.from('profiles').select('*').eq('id', user.id).single();
-      if (prof?.role === 'livreur') { currentUser = user; currentProfile = prof; await bootApp(); }
+      if (prof?.role === 'livreur') {
+        currentUser = user; currentProfile = prof; await bootApp();
+      } else if (prof) {
+        // BUG FIX: notify user if session exists but not a livreur
+        toast('❌ Accès refusé — compte non livreur', 'error');
+        await sb.auth.signOut();
+      }
     }
   }
 });
